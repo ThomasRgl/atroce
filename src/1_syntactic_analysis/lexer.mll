@@ -15,13 +15,50 @@ rule token = parse
 | [ ' ' '\t' ]              { token lexbuf }
 | '\n'                      { Lexing.new_line lexbuf; token lexbuf }
 | '#'                       { comment lexbuf }
-| "return"                  { Lreturn }
-| ";"                       { Lsc }
-| "*"                       { Lmul }
-| "+"                       { Ladd }
-| "="                       { Lassign }
+
+(* Symbols *)
+| ","      { Lcomma }
+| ";"      { Lsc }
+| "="      { Lassign }
+| "++"     { LToDo }
+| "--"     { LToDo }
+| "("      { Lopar }
+| ")"      { Lcpar }
+| "{"      { Lobrace }
+| "}"      { Lcbrace }
+| "["      { Lobrack }
+| "]"      { Lcbrack }
+| "+"      { Ladd }
+| "-"      { Lsub }
+| "*"      { Lmul }
+| "/"      { Ldiv }
+| "=="     { Leq }  
+| "!="     { Lneq }
+| "<"      { Llt }
+| "<="     { Lle }
+| ">"      { Lgt }
+| ">="     { Lge }
+| "&&"     { Land } 
+| "||"     { Lor }    
+| "->"     { LToDo }               
+
+(* Keywords *)
+
+
+| "return" { Lreturn }
+| "while"  { Lwhile }
+| "for"    { Lfor }
+| "do"     { Ldo }
+| "break"  { Lbreak }
+| "if"     { Lif }
+| "else"   { Lelse }
+
+(* Identifiers *)
+
 | identifier as c           { Lvar (c) }
 | num+ as n                 { Lint (int_of_string n) }
+
+
 | _ as c                    { raise (Error c) }
 and comment = parse
 | eof  { Lend }
