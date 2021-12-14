@@ -82,21 +82,24 @@ and analyze_block block l_env g_env =
         let ab, l_env, g_env = analyze_block rest  l_env g_env in
         ai :: ab, l_env, g_env
 
-let rec analyse_params params =
+let rec analyse_params params l_env =
     match params with
-    | [] -> []
+    | [] -> [], l_env
     | Syntax.Param p :: rest -> 
-        let param = Param( p.type_, p.name) in 
-        [ param ] @ analyse_params rest  
+        let param = Param( p.type_, p.name) in
+        let l_env = Env.add p.name Int_t l_env in
+        let ap, env = analyse_params rest l_env in 
+        [ param ] @ ap, l_env 
 
 
 let rec analyze_func def l_env g_env =
     match def with
     | [] -> [], l_env, g_env
     | Syntax.Func f :: rest ->
+        let args, new_l_env = analyse_params f.params Env.empty in 
         let g_env = Env.add f.name Int_t g_env in
-        let ab, l_env, g_env = analyze_block f.block Env.empty g_env in
-        let ad = Func( f.type_,  f.name, analyse_params f.params, ab ) in
+        let ab, l_env, g_env = analyze_block f.block new_l_env g_env in
+        let ad = Func( f.type_,  f.name, args, ab ) in
         let af, l_env, g_env = analyze_func rest l_env g_env in 
         [ad] @ af, l_env, g_env
 
