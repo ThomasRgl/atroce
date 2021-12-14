@@ -18,15 +18,15 @@ let expr_pos expr =
 
 let errt expected given pos =
     raise (Error (Printf.sprintf "expected %s but given %s"
-                    (string_of_type_t expected)
-                    (string_of_type_t given),
+                    (var_of_type expected)
+                    (var_of_type given),
                     pos))
 
 (* analyse sémantique *)
 
 let rec analyze_expr expr l_env g_env =
     match expr with
-    | Syntax.Int n  -> Int n.value, Int_t
+    | Syntax.Int n  -> Int n.value,  (Builtin_t "int" )
     | Syntax.Var v ->
         if Env.mem v.name l_env then
             Var v.name, Env.find v.name l_env
@@ -34,15 +34,15 @@ let rec analyze_expr expr l_env g_env =
             raise (Error (Printf.sprintf "unbound variable '%s'" v.name, v.pos))
     | Syntax.Call c ->
         (match Env.find_opt c.func g_env with
-        | Some (Func_t (rt, at)) ->
-            if List.length at != List.length c.args then
+        | Some (Func_t (func_type, params_type)) ->
+            if List.length params_type != List.length c.args then
                 raise (Error (Printf.sprintf "expected %d arguments but given %d"
-                            (List.length at) (List.length c.args), c.pos)) ;
-            let args = List.map2 (fun eat a -> let aa, at = analyze_expr a l_env g_env
-                                                in  if at = eat then aa
-                                                    else errt eat at (expr_pos a))
-                                at c.args in
-            Call (c.func, args), rt
+                            (List.length params_type) (List.length c.args), c.pos)) ;
+            let args = List.map2 (fun param_type arg -> let a_arg, arg_type = analyze_expr arg l_env g_env
+                                                        in  if arg_type = param_type then a_arg
+                                                            else errt param_type arg_type (expr_pos arg))
+                                params_type c.args in
+            Call (c.func, args), func_type
         | Some _ -> raise (Error (Printf.sprintf "'%s' is not a function" c.func, c.pos))
         | None -> raise (Error (Printf.sprintf "undefined function '%s'" c.func, c.pos)))
 
@@ -50,19 +50,19 @@ let rec analyze_instr instr l_env g_env =
     match instr with
     | Syntax.Decl d ->
         if Env.mem d.var l_env then
-            (* tester si d est une fonction *)
             raise (Error (Printf.sprintf "redeclaration of '%s'" d.var, d.pos))
         else
-            let l_env = Env.add d.var Int_t l_env in 
+            (* tester si le type existe *)
+            let l_env = Env.add d.var  (Builtin_t "int" ) l_env in 
             Decl( d.type_, d.var), l_env, g_env
     | Syntax.Assign a ->
         (* verifier que la var existe *)
         (* verifier que la var est du bon type *)
         (match Env.find_opt a.var l_env with
-        | Some (Int_t ) ->
+        | Some (Builtin_t v) ->
                     let ae, et = analyze_expr a.expr l_env g_env in
                     Assign (a.var, ae), l_env, g_env
-        | Some _ -> raise (Error (Printf.sprintf "'%s' is not a variable" a.var, a.pos))
+        (* | Some _ -> raise (Error (Printf.sprintf "'%s' is not a variable" a.var, a.pos)) *)
         | None -> raise (Error (Printf.sprintf "'%s' undeclared " a.var , a.pos)) )
 
     | Syntax.Return r ->
@@ -87,7 +87,8 @@ let rec analyse_params params l_env =
     | [] -> [], l_env
     | Syntax.Param p :: rest -> 
         let param = Param( p.type_, p.name) in
-        let l_env = Env.add p.name Int_t l_env in
+        let l_env = Env.add p.name  (Builtin_t "int" ) l_env in
+        (* peut etre un assign ou un declare ? *)
         let ap, env = analyse_params rest l_env in 
         [ param ] @ ap, l_env 
 
@@ -96,10 +97,11 @@ let rec analyze_func def l_env g_env =
     match def with
     | [] -> [], l_env, g_env
     | Syntax.Func f :: rest ->
-        let args, new_l_env = analyse_params f.params Env.empty in 
-        let g_env = Env.add f.name Int_t g_env in
-        let ab, l_env, g_env = analyze_block f.block new_l_env g_env in
-        let ad = Func( f.type_,  f.name, args, ab ) in
+        let params, new_l_env = analyse_params f.params Env.empty in 
+        let params_type = List.map (fun param -> ( match param with Param(a,b) -> (Builtin_t a ) )) params in 
+        let g_env = Env.add f.name  ( Func_t (Builtin_t "int", params_type )) g_env in
+        let ab, _ , g_env = analyze_block f.block new_l_env g_env in
+        let ad = Func( f.type_,  f.name, params, ab ) in
         let af, l_env, g_env = analyze_func rest l_env g_env in 
         [ad] @ af, l_env, g_env
 
@@ -108,7 +110,7 @@ let analyze_prog parsed l_env g_env =
     af
 
 let analyze parsed =
-    analyze_prog parsed Env.empty Baselib._types_ 
+    analyze_prog parsed Env.empty Baselib.nom_provisoire 
     
 
 (*

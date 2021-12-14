@@ -1,15 +1,26 @@
+type var_t =
+	| Builtin_t of string 
+
 type type_t =
-	| Int_t
-	| Func_t of type_t * type_t list
+	| Var_t of var_t
+	| Func_t of var_t * var_t list
+	(* | Int_t   *)
+
+let  var_of_type v =
+	match v with 
+	| Builtin_t b -> b 
 
 let rec string_of_type_t t =
 	match t with
-	| Int_t  -> "int"
+	(* | Int_t  -> "int" *)
 	| Func_t (r, a) ->
 		 (if (List.length a) > 1 then "(" else "")
-		 ^ (String.concat ", " (List.map string_of_type_t a))
+		 ^ (String.concat ", " (List.map var_of_type a))
 		 ^ (if (List.length a) > 1 then ")" else "")
-		 ^ " -> " ^ (string_of_type_t r)
+		 ^ " -> " ^ (var_of_type r)
+	| Var_t (v) -> var_of_type v
+
+
 
 module Syntax = struct
 	type ident = string
