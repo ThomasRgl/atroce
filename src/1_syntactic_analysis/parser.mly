@@ -134,7 +134,7 @@ ifthenelseInstr:
 (* Def; *)
 
 funcDef: 
-| type_ = Lvar; name = Lvar; Lopar; p = params; Lcpar; Lobrace; b=block; Lcbrace { 
+| type_ = Lvar; name = Lvar; Lopar; p = separated_list(Lcomma, param) ; Lcpar; Lobrace; b=block; Lcbrace { 
     Func { type_ = type_; name = name; params = p; block = b; pos = $startpos(name) }
 }
 ;

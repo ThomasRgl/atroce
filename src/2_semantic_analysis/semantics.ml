@@ -53,7 +53,7 @@ let rec analyze_instr instr l_env g_env =
             raise (Error (Printf.sprintf "redeclaration of '%s'" d.var, d.pos))
         else
             (* tester si le type existe *)
-            let l_env = Env.add d.var  (Builtin_t "int" ) l_env in 
+            let l_env = Env.add d.var  (Builtin_t d.type_ ) l_env in 
             Decl( d.type_, d.var), l_env, g_env
     | Syntax.Assign a ->
         (* verifier que la var existe *)
@@ -87,7 +87,7 @@ let rec analyse_params params l_env =
     | [] -> [], l_env
     | Syntax.Param p :: rest -> 
         let param = Param( p.type_, p.name) in
-        let l_env = Env.add p.name  (Builtin_t "int" ) l_env in
+        let l_env = Env.add p.name  (Builtin_t p.type_ ) l_env in
         (* peut etre un assign ou un declare ? *)
         let ap, env = analyse_params rest l_env in 
         [ param ] @ ap, l_env 
@@ -99,7 +99,7 @@ let rec analyze_func def l_env g_env =
     | Syntax.Func f :: rest ->
         let params, new_l_env = analyse_params f.params Env.empty in 
         let params_type = List.map (fun param -> ( match param with Param(a,b) -> (Builtin_t a ) )) params in 
-        let g_env = Env.add f.name  ( Func_t (Builtin_t "int", params_type )) g_env in
+        let g_env = Env.add f.name  ( Func_t (Builtin_t f.type_, params_type )) g_env in
         let ab, _ , g_env = analyze_block f.block new_l_env g_env in
         let ad = Func( f.type_,  f.name, params, ab ) in
         let af, l_env, g_env = analyze_func rest l_env g_env in 
