@@ -20,11 +20,12 @@
 %token LToDo
 
 
+%left Lassign;
 %left Land Lor;
 %left Leq Lneq Llt Lgt Lle Lge;
 %left Ladd Lsub;
 %left Lmul Ldiv;
-%left Lassign;
+
 
 %start prog
 
