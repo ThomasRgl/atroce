@@ -13,7 +13,7 @@ exception Error of string * Lexing.position
 let expr_pos expr =
     match expr with 
     | Syntax.Int n  -> n.pos
-    | Syntax.Var v  -> v.pos
+    | Syntax.Lvar v  -> v.pos
     | Syntax.Call c -> c.pos
 
 let errt expected given pos =
@@ -26,25 +26,40 @@ let errt expected given pos =
 
 let rec analyze_expr expr l_env g_env =
     match expr with
-    | Syntax.Int n  -> Int n.value,  (Builtin_t "int" )
-    | Syntax.Var v ->
-        if Env.mem v.name l_env then
-            Var v.name, Env.find v.name l_env
-        else
-            raise (Error (Printf.sprintf "unbound variable '%s'" v.name, v.pos))
+    | Syntax.Int  n  -> Int n.value,  (Builtin_t "int" ), l_env
+    | Syntax.Lvar v -> analyze_lvar v.lvar l_env g_env
     | Syntax.Call c ->
         (match Env.find_opt c.func g_env with
         | Some (Func_t (func_type, params_type)) ->
             if List.length params_type != List.length c.args then
                 raise (Error (Printf.sprintf "expected %d arguments but given %d"
                             (List.length params_type) (List.length c.args), c.pos)) ;
-            let args = List.map2 (fun param_type arg -> let a_arg, arg_type = analyze_expr arg l_env g_env
+            let args = List.map2 (fun param_type arg -> let a_arg, arg_type, _ = analyze_expr arg l_env g_env
                                                         in  if arg_type = param_type then a_arg
                                                             else errt param_type arg_type (expr_pos arg))
                                 params_type c.args in
-            Call (c.func, args), func_type
+            Call (c.func, args), func_type, l_env
         | Some _ -> raise (Error (Printf.sprintf "'%s' is not a function" c.func, c.pos))
         | None -> raise (Error (Printf.sprintf "undefined function '%s'" c.func, c.pos)))
+    
+and  analyze_lvar var l_env g_env = 
+    match var with 
+    | Syntax.Var v ->
+        if Env.mem v.name l_env then
+            Var v.name, Env.find v.name l_env, l_env
+        else
+            raise (Error (Printf.sprintf "unbound variable '%s'" v.name, v.pos))
+
+    | Syntax.Assign a ->
+    (* verifier que la var existe *)
+    (* verifier que la var est du bon type *)
+        (match Env.find_opt a.name l_env with
+        | Some (Builtin_t v) ->
+                    let ae, et, l_env = analyze_expr a.expr l_env g_env in
+                    Assign (a.name, ae), (Builtin_t v ) ,l_env
+        (* | Some _ -> raise (Error (Printf.sprintf "'%s' is not a variable" a.var, a.pos)) *)
+        | None -> raise (Error (Printf.sprintf "'%s' undeclared " a.name , a.pos)) )
+
 
 let rec analyze_instr instr l_env g_env =
     match instr with
@@ -55,25 +70,17 @@ let rec analyze_instr instr l_env g_env =
             (* tester si le type existe *)
             let l_env = Env.add d.var  (Builtin_t d.type_ ) l_env in 
             Decl( d.type_, d.var), l_env, g_env
-    | Syntax.Assign a ->
-        (* verifier que la var existe *)
-        (* verifier que la var est du bon type *)
-        (match Env.find_opt a.var l_env with
-        | Some (Builtin_t v) ->
-                    let ae, et = analyze_expr a.expr l_env g_env in
-                    Assign (a.var, ae), l_env, g_env
-        (* | Some _ -> raise (Error (Printf.sprintf "'%s' is not a variable" a.var, a.pos)) *)
-        | None -> raise (Error (Printf.sprintf "'%s' undeclared " a.var , a.pos)) )
-
     | Syntax.Return r ->
-        let ae, _ = analyze_expr r.expr l_env g_env in
+        let ae, _, _ = analyze_expr r.expr l_env g_env in
         Return ae, l_env, g_env
     | Syntax.Cond aa ->
-        let c,_ = analyze_expr  aa.cond  l_env g_env in 
+        let c, _   , l_env = analyze_expr  aa.cond  l_env g_env in 
         let t,l_env, g_env = analyze_block aa.then_ l_env g_env in 
         let e,l_env, g_env = analyze_block aa.else_ l_env g_env in 
         Cond( c, t, e ), l_env, g_env
-
+    | Syntax.Expr e ->
+        let ae, _, l_env = analyze_expr e.expr l_env g_env in
+        Expr( ae ), l_env, g_env
 and analyze_block block l_env g_env =
     match block with
     | [] -> [], l_env, g_env
