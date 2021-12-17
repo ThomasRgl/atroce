@@ -19,9 +19,9 @@ let () =
     	let parsed = Parser.prog Lexer.token buf in
     	close_in f ;
     	let ast = Semantics.analyze parsed in
-    	print_endline (IR.string_of_ir ast);
-		(* let compiled = Compiler.compile ast in
-    	Mips.print_asm Stdlib.stdout compiled *)
+    	(* print_endline (IR.string_of_ir ast); *)
+			let compiled = Compiler.compile ast in
+    	Mips.print_asm Stdlib.stdout compiled
   	with
   	| Lexer.Error c ->
     	err (Printf.sprintf "unrecognized char '%c'" c) (Lexing.lexeme_start_p buf)

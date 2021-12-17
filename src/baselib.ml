@@ -6,18 +6,20 @@ module Env = Map.Make(String)
 let nom_provisoire =
     Env.of_seq
         (List.to_seq
-            [ "%add", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
-            ; "%sub", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
-            ; "%mul", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
-            ; "%div", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
+            [ "_add", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
+            ; "_sub", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
+            ; "_mul", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
+            ; "_div", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
             
-            ; "%seq", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
-            ; "%neq", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ]) 
-            ; "%lt" , Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
-            ; "%le" , Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
-            ; "%gt" , Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ]) 
-            ; "%ge" , Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
-            ; "%div", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
+            ; "_seq", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
+            ; "_neq", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ]) 
+            ; "_lt" , Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
+            ; "_le" , Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
+            ; "_gt" , Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ]) 
+            ; "_ge" , Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
+            ; "_div", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
+
+            ; "puti", Func_t (Builtin_t "int", [ Builtin_t "int"  ])
        
         ])
 

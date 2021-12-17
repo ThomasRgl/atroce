@@ -106,16 +106,16 @@ varExpr : v = Lvar {
 
 
 opExpr  : 
-| a = expr; Ladd; b = expr { Call {  func = "%add"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Lsub; b = expr { Call {  func = "%sub"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Lmul; b = expr { Call {  func = "%mul"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Ldiv; b = expr { Call {  func = "%div"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Leq;  b = expr { Call {  func = "%mul"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Lneq; b = expr { Call {  func = "%mul"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Llt;  b = expr { Call {  func = "%mul"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Lle;  b = expr { Call {  func = "%mul"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Lgt;  b = expr { Call {  func = "%mul"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Lge;  b = expr { Call {  func = "%mul"; args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Ladd; b = expr { Call {  func = "_add"; args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Lsub; b = expr { Call {  func = "_sub"; args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Lmul; b = expr { Call {  func = "_mul"; args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Ldiv; b = expr { Call {  func = "_div"; args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Leq;  b = expr { Call {  func = "_mul"; args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Lneq; b = expr { Call {  func = "_mul"; args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Llt;  b = expr { Call {  func = "_mul"; args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Lle;  b = expr { Call {  func = "_mul"; args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Lgt;  b = expr { Call {  func = "_mul"; args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Lge;  b = expr { Call {  func = "_mul"; args = [a ; b]; pos = $startpos($2) } } 
 (*| a = expr; Land;  b = expr {  } todo*)
 (*| a = expr; Lor;   b = expr {  } todo*)
 ;
