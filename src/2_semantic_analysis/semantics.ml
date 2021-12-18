@@ -78,6 +78,10 @@ let rec analyze_instr instr l_env g_env =
         let t,l_env, g_env = analyze_block aa.then_ l_env g_env in 
         let e,l_env, g_env = analyze_block aa.else_ l_env g_env in 
         Cond( c, t, e ), l_env, g_env
+    | Syntax.Loop l ->
+        let c, _, l_env     = analyze_expr l.cond   l_env g_env in 
+        let b, l_env, g_env = analyze_block l.block l_env g_env in 
+        Loop( c, b ), l_env, g_env
     | Syntax.Expr e ->
         let ae, _, l_env = analyze_expr e.expr l_env g_env in
         Expr( ae ), l_env, g_env

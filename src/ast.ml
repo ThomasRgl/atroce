@@ -53,6 +53,9 @@ module Syntax = struct
                     ; then_: block 
                     ; else_: block
                     ; pos : Lexing.position }
+        | Loop   of { cond: expr
+                    ; block: block 
+                    ; pos : Lexing.position }
         | Expr   of { expr: expr
                     ; pos : Lexing.position }
 
@@ -78,10 +81,11 @@ module IR = struct
         | Call of ident * expr list
         | Assign of ident * expr
     type instr =
-        | Expr  of expr
+        | Expr   of expr
         | Return of expr
         | Decl   of ident * ident 
         | Cond   of expr * block * block
+        | Loop   of expr * block  
     and block = instr list
 
     type def = 
@@ -102,6 +106,7 @@ module IR = struct
             | Return e      -> "Return (" ^ (fmt_e e) ^ ")"
             | Decl (t,n)    -> "Decl (" ^ t ^ " " ^ n ^  ")"
             | Cond (c,t,e)  -> "If (" ^ fmt_e c ^  ") { \n" ^ fmt_b t ^ "\n } \n else {" ^ fmt_b e ^ "}" 
+            | Loop (c,b )   -> "while (" ^ fmt_e c ^  ") { \n" ^ fmt_b b ^ "\n } \n " 
             | Expr e ->  fmt_e e
 
         and fmt_b b = "[ " ^ (String.concat "\n; " (List.map fmt_i b)) ^ " ]"

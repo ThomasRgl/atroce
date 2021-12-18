@@ -68,6 +68,7 @@ instr:
 | a = returnInstr; Lsc { a }
 | a = declInstr;   Lsc { a }
 | a = ifthenelseInstr  { a }
+| a = loopInstr        { a }
 | a = expr; Lsc  { [Expr { expr = a; pos = $startpos(a) }] } 
 ;
 
@@ -177,6 +178,12 @@ ifthenelseInstr:
 | Lif; Lopar; c = expr; Lcpar; Lobrace; t = block; Lcbrace; Lelse; Lobrace; e = block; Lcbrace {
     [ Cond{ cond = c;  then_ = t; else_ = e;  pos = $startpos($1)  }] 
 }  
+;
+
+loopInstr:
+| Lwhile Lopar cond = expr Lcpar Lobrace b = block Lcbrace {
+    [ Loop { cond = cond; block = b; pos = $startpos($1) } ]
+}   
 ;
 
 (* Def; *)
