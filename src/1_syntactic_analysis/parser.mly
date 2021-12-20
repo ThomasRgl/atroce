@@ -13,7 +13,7 @@
 %token Leq Lneq Llt Lle Lgt Lge 
 %token Lopar Lcpar Lobrace Lcbrace Lobrack Lcbrack
 %token Lassign
-%token Lesp
+%token Lesp Lptr
 
 %token Lwhile Lfor Ldo Lbreak Lif Lelse 
 %token Lreturn 
@@ -28,7 +28,7 @@
 %left Ladd Lsub;
 %left Lmul Ldiv;
 %right Lesp
-
+%right Lptr
 
 %start prog
 
@@ -103,7 +103,7 @@ lvalue:
 
 
 leftValueAdrrExpr:
-| Lmul; v = Lvar { LeftAddrValue{ name = v; pos = $startpos($1)  } };
+| Lptr; v = Lvar { LeftAddrValue{ name = v; pos = $startpos($1)  } };
 
 leftVar :
 | v = Lvar { LeftVar{ name = v; pos = $startpos(v)  } };
@@ -147,7 +147,7 @@ addrExpr:
 ;
 
 valueAdrrExpr:
-| Lmul; v = Lvar { Call {  func = "_valueAdrr";  args = [ Var {name=v; pos = $startpos(v) }  ]; pos = $startpos(v) } } 
+| Lptr; v = Lvar { Call {  func = "_valueAdrr";  args = [ Var {name=v; pos = $startpos(v) }  ]; pos = $startpos(v) } } 
 ;
 
 assignExpr: 
@@ -181,7 +181,7 @@ declInstr:
                         )) l )
 }
 
-| type_ = Lvar; Lmul; l = separated_nonempty_list(Lcomma, expr) { 
+| type_ = Lvar; Lptr; l = separated_nonempty_list(Lcomma, expr) { 
     List.flatten ( 
         List.map (fun e ->  (match e with 
                         | Var v    -> 
