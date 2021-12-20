@@ -20,7 +20,9 @@ let nom_provisoire =
 
 			; "puti", Func_t (Builtin_t "void", [ Builtin_t "int"  ])
 			; "puts", Func_t (Builtin_t "void", [ Builtin_t "int"  ])
-	
+
+            ; "_adrr"      , Func_t (Builtin_t "int", [ Builtin_t "int" ])
+            ; "_valueAdrr" , Func_t (Builtin_t "int", [ Builtin_t "int" ])
 		])
 
 let _type_ =
@@ -127,5 +129,18 @@ let builtins =
 	; Li (V0, Syscall.print_char)
 	; Syscall
 	; Jr RA
+
+    (* wtf are you doing ??? la pile est refaite à chaque appel de fonction tu as pas l'adresse de la variable fdp 
+    ; Label "_adrr"
+	; Lw (V0, Mem (SP, 0) )
+    (* ; Move (V0, SP ) *)
+	; Jr RA *)
+
+    ; Label "_valueAdrr"
+	; Lw (T0, Mem (SP, 0))
+    ; Lw (V0, Mem (T0, 0))
+    ; Li (V0, 90)
+	; Jr RA
+
 
 	]

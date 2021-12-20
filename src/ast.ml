@@ -43,6 +43,8 @@ module Syntax = struct
                     ; pos: Lexing.position }
         | Var  of 	{ name: ident
                     ; pos: Lexing.position }
+        | Addr of   { name: ident
+                    ; pos: Lexing.position }
     type instr =
         | Decl of 	{ type_: ident
                     ; var: ident
@@ -80,6 +82,7 @@ module IR = struct
         | Var  of ident
         | Call of ident * expr list
         | Assign of ident * expr
+        | Addr of ident 
     type instr =
         | Expr   of expr
         | Return of expr
@@ -101,6 +104,8 @@ module IR = struct
                                              ^ (String.concat " ; " (List.map fmt_e a))
                                              ^ " ])"
             | Assign (v, e) -> "Assign (\"" ^ v ^ "\", " ^ (fmt_e e) ^ ")"
+
+            | Addr v -> "&Var \"" ^ v ^ "\""
 
         and fmt_i = function
             | Return e      -> "Return (" ^ (fmt_e e) ^ ")"

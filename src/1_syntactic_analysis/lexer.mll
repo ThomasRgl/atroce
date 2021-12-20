@@ -40,7 +40,8 @@ rule token = parse
 | ">="     { Lge }
 | "&&"     { Land } 
 | "||"     { Lor }    
-| "->"     { LToDo }               
+| "->"     { LToDo } 
+| "&"      { Lesp }               
 
 (* Keywords *)
 

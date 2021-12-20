@@ -20,7 +20,7 @@ let () =
     	close_in f ;
     	let ast = Semantics.analyze parsed in
     	(* print_endline (IR.string_of_ir ast); *)
-			let compiled = Compiler.compile ast in
+		let compiled = Compiler.compile ast in
     	Mips.print_asm Stdlib.stdout compiled
   	with
   	| Lexer.Error c ->

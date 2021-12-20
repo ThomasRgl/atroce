@@ -3,8 +3,12 @@ SUBDIR = src,src/1_syntactic_analysis,src/2_semantic_analysis,src/3_IR_productio
 all :
 	ocamlbuild -r -Is $(SUBDIR) -use-menhir test.byte 
 
-
+explain : 
+	menhir --explain src/1_syntactic_analysis/parser.mly
 
 launch : 
 	./test.byte tests/5.test > test.asm
 	spim -file test.asm
+
+launch2 : 
+	./test.byte tests/5.test 

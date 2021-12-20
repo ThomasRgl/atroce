@@ -43,6 +43,7 @@ let rec compile_expr e env =
 						@ [ Lw (T0, Mem (SP, 0))
 						; Addi (SP, SP, 4)
 						; Sw (T0, Mem (V0, 0)) ])  *)
+    | Addr v   -> []
 
 let rec compile_instr i info =
     match i with

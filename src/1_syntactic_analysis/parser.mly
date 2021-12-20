@@ -12,6 +12,7 @@
 %token Leq Lneq Llt Lle Lgt Lge 
 %token Lopar Lcpar Lobrace Lcbrace Lobrack Lcbrack
 %token Lassign
+%token Lesp
 
 %token Lwhile Lfor Ldo Lbreak Lif Lelse 
 %token Lreturn 
@@ -25,6 +26,7 @@
 %left Leq Lneq Llt Lgt Lle Lge;
 %left Ladd Lsub;
 %left Lmul Ldiv;
+%right Lesp
 
 
 %start prog
@@ -69,14 +71,17 @@ instr:
 | a = declInstr;   Lsc { a }
 | a = ifthenelseInstr  { a }
 | a = loopInstr        { a }
-| a = expr; Lsc  { [Expr { expr = a; pos = $startpos(a) }] } 
+/* | a = expr; Lsc  { [Expr { expr = a; pos = $startpos(a) }] }  */ (*This is not clean, but this is the only way I found to parse the pointers *)
+| a = lvarExpr; Lsc  { [Expr { expr = a; pos = $startpos(a) }] } 
+| a = callExpr; Lsc  { [Expr { expr = a; pos = $startpos(a) }] } 
 ;
 
 
 
 expr:
-| a = intExpr { a }
-| a = opExpr  { a }
+| a = intExpr  { a }
+| a = opExpr   { a }
+| a = valueAdrrExpr { a }
 | a = callExpr { a }
 | a = lvarExpr { a }
 
@@ -84,8 +89,9 @@ expr:
 
 
 lvar:
-| a = varExpr   { a }
 | a = assignVar { a }
+| a = addrExpr { a }
+| a = varExpr   { a }
 ;
  
 
@@ -96,8 +102,13 @@ assignVar:
 | v = Lvar; Lassign; b = expr { 
     Assign { name = v; expr = b; pos = $startpos($2) } };
 
+addrExpr:
+| Lesp; v = Lvar { Addr{ name = v; pos = $startpos(v) }   };
+
 varExpr : v = Lvar { 
     Var { name = v; pos = $startpos(v) } };
+
+
 
  
 
@@ -111,15 +122,19 @@ opExpr  :
 | a = expr; Lsub; b = expr { Call {  func = "_sub"; args = [a ; b]; pos = $startpos($2) } } 
 | a = expr; Lmul; b = expr { Call {  func = "_mul"; args = [a ; b]; pos = $startpos($2) } } 
 | a = expr; Ldiv; b = expr { Call {  func = "_div"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Leq;  b = expr { Call {  func = "_eq"; args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Leq;  b = expr { Call {  func = "_eq";  args = [a ; b]; pos = $startpos($2) } } 
 | a = expr; Lneq; b = expr { Call {  func = "_neq"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Llt;  b = expr { Call {  func = "_lt"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Lle;  b = expr { Call {  func = "_le"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Lgt;  b = expr { Call {  func = "_gt"; args = [a ; b]; pos = $startpos($2) } } 
-| a = expr; Lge;  b = expr { Call {  func = "_ge"; args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Llt;  b = expr { Call {  func = "_lt";  args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Lle;  b = expr { Call {  func = "_le";  args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Lgt;  b = expr { Call {  func = "_gt";  args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Lge;  b = expr { Call {  func = "_ge";  args = [a ; b]; pos = $startpos($2) } } 
 (*| a = expr; Land;  b = expr {  } todo*)
 (*| a = expr; Lor;   b = expr {  } todo*)
 ;
+
+
+valueAdrrExpr:
+| Lmul; v = Lvar { Call {  func = "_valueAdrr";  args = [Lvar{ lvar = Var {name=v; pos = $startpos(v) } ; pos = $startpos(v) } ]; pos = $startpos(v) } } 
 
 callExpr : 
 | f = Lvar; Lopar; args = separated_list(Lcomma, expr) ;Lcpar {
@@ -138,22 +153,6 @@ lvarExpr : n = lvar { Lvar{ lvar  = n ; pos = $startpos(n) } };
 
 
 declInstr:
-(*
-| type_ = Lvar; name = Lvar { 
-    Decl{ type_ = type_; var = name; pos = $startpos(type_) }}
-*)
-/* | type_ = Lvar; e = lvar { 
-    (match e with 
-	| Var v    -> 
-        [ Decl{ type_ = type_; var = v.name; pos = $startpos(type_) } ] 
-	| Assign a -> 
-        let decl = [ Decl{ type_ = type_; var = a.name; pos = $startpos(type_) } ] in 
-        let mylvar    =  Lvar{ lvar = e; pos = $startpos(e) } in 
-        let myvarExpr =  [ Expr{ expr = mylvar; pos = $startpos(e) } ] in 
-        decl @ myvarExpr;
-    )
-} 
-; */
 | type_ = Lvar; l = separated_nonempty_list(Lcomma, lvar) { 
     List.flatten ( 
         List.map (fun e ->  (match e with 
@@ -164,6 +163,23 @@ declInstr:
                             let mylvar    =  Lvar{ lvar = e; pos = $startpos(l) } in 
                             let myvarExpr =  [ Expr{ expr = mylvar; pos = $startpos(l) } ] in 
                             decl @ myvarExpr;
+                        | Addr a   ->
+                            [ Decl{ type_ = type_; var = a.name; pos = $startpos(type_) } ] 
+                        )) l )
+}
+
+| type_ = Lvar; Lmul; l = separated_nonempty_list(Lcomma, lvar) { 
+    List.flatten ( 
+        List.map (fun e ->  (match e with 
+                        | Var v    -> 
+                            [ Decl{ type_ = type_^""; var = v.name; pos = $startpos(type_) } ] 
+                        | Assign a -> 
+                            let decl = [ Decl{ type_ = type_; var = a.name; pos = $startpos(type_) } ] in 
+                            let mylvar    =  Lvar{ lvar = e; pos = $startpos(l) } in 
+                            let myvarExpr =  [ Expr{ expr = mylvar; pos = $startpos(l) } ] in 
+                            decl @ myvarExpr;
+                        | Addr a   ->
+                            [ Decl{ type_ = type_; var = a.name; pos = $startpos(type_) } ] 
                         )) l )
 } 
 ;

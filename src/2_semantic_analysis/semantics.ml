@@ -59,6 +59,11 @@ and  analyze_lvar var l_env g_env =
                     Assign (a.name, ae), (Builtin_t v ) ,l_env
         (* | Some _ -> raise (Error (Printf.sprintf "'%s' is not a variable" a.var, a.pos)) *)
         | None -> raise (Error (Printf.sprintf "'%s' undeclared " a.name , a.pos)) )
+    | Syntax.Addr v ->
+        if Env.mem v.name l_env then
+            Addr v.name, Env.find v.name l_env, l_env
+        else
+            raise (Error (Printf.sprintf "unbound variable '%s'" v.name, v.pos))
 
 
 let rec analyze_instr instr l_env g_env =
