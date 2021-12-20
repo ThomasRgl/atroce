@@ -5,7 +5,7 @@ open Ast.V2*)
 module Env = Map.Make(String)
 
 type cinfo = { code: Mips.instr list
-			 ; env: Mips.loc Env.t
+			 ; env: int Env.t
 			 ; fpo: int
 			 ; counter: int
 			 ; return: string }
@@ -21,7 +21,7 @@ let rec compile_expr e env =
 	match e with
 	(* | Value v -> compile_value v *)
 	| Int n  -> [ Li (V0, n) ]
-	| Var v   -> [ Lw (V0, Env.find v env) ]
+	| Var v   -> [ Lw (V0, Mem( FP, Env.find v env) ) ]
 	| Call (f, args) ->
 		let ca = List.map (fun a ->
 						compile_expr a env
@@ -33,7 +33,7 @@ let rec compile_expr e env =
 	   				Addi (SP, SP, 4 * (List.length args)) ]
 	| Assign (lv, e) ->
 		compile_expr e env
-		@ [ Sw (V0, Env.find lv env) ]
+		@ [ Sw (V0, Mem( FP, Env.find lv env)) ]
 		(* @ (match lv with
 			| LVar  v -> [ Sw (V0, Env.find v env) ]
 			| LAddr a -> []
@@ -43,13 +43,13 @@ let rec compile_expr e env =
 						@ [ Lw (T0, Mem (SP, 0))
 						; Addi (SP, SP, 4)
 						; Sw (T0, Mem (V0, 0)) ])  *)
-    | Addr v   -> []
+    | Addr v   -> [ Addi(V0, FP, Env.find v env) ]
 
 let rec compile_instr i info =
     match i with
     | Decl (todo,v) ->
         { info with
-        env = Env.add v (Mem (FP, -info.fpo)) info.env; 
+        env = Env.add v ( -info.fpo) info.env; 
         fpo = info.fpo + 4 }
     | Return e ->
         { info with
@@ -107,7 +107,7 @@ let compile_def (Func (type_,name, params, b)) counter =
     let cb = compile_block b
 			    { code = []
 			    ; env =  List.fold_left
-						(fun e (i, a) -> Env.add a (Mem (FP, 4 * i)) e)
+						(fun e (i, a) -> Env.add a ( 4 * i) e)
 						Env.empty (List.mapi (fun i a -> i + 1, a) args)
 			    ; fpo = 8
 			    ; counter = counter + 1

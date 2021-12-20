@@ -71,8 +71,8 @@ let fmt_reg = function
     | T2   -> "$t2"
 
 let fmt_loc = function
-	| Lbl (l)    -> l
-	| Mem (r, o) -> ps "%d(%s)" o (fmt_reg r)
+	| Lbl  (l)    -> l
+	| Mem  (r, o) -> ps "%d(%s)" o (fmt_reg r)
 
 let fmt_instr = function
 	| Label (l)        -> ps "%s:" l
