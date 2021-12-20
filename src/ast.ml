@@ -32,19 +32,22 @@ module Syntax = struct
     type expr =
         | Int  of 	{ value: int
                     ; pos: Lexing.position }
-        | Call of 	{ func: ident
-                    ; args: expr list
-                    ; pos: Lexing.position }
-        | Lvar of   { lvar: lvar
-                    ; pos: Lexing.position } 
-    and lvar =  
-        | Assign of { name: ident
-                    ; expr: expr
-                    ; pos: Lexing.position }
         | Var  of 	{ name: ident
                     ; pos: Lexing.position }
         | Addr of   { name: ident
                     ; pos: Lexing.position }
+        | Call of 	{ func: ident
+                    ; args: expr list
+                    ; pos: Lexing.position }
+        | Assign of { lvalue: lvalue
+                    ; expr: expr
+                    ; pos: Lexing.position }
+    and lvalue =  
+        | LeftVar of { name: ident
+                     ; pos: Lexing.position }
+        | LeftAddrValue of { name: ident
+                           ; pos: Lexing.position }
+
     type instr =
         | Decl of 	{ type_: ident
                     ; var: ident
@@ -78,11 +81,15 @@ module IR = struct
     type param = 
         | Param of ident * ident
     type expr =
-        | Int  of int
-        | Var  of ident
-        | Call of ident * expr list
-        | Assign of ident * expr
-        | Addr of ident 
+        | Int    of int
+        | Var    of ident
+        | Addr   of ident 
+        | Call   of ident * expr list
+        | Assign of lvalue * expr
+    and lvalue =
+        | LeftVar       of ident
+        | LeftAddrValue of ident
+
     type instr =
         | Expr   of expr
         | Return of expr
@@ -98,15 +105,17 @@ module IR = struct
 
     let string_of_ir ast =
         let rec fmt_e = function
-            | Int n       -> "Int " ^ (string_of_int n)
-            | Var v       -> "Var \"" ^ v ^ "\""
-            | Call (f, a) -> "Call (\"" ^ f ^ "\", [ "
+            | Int n          -> "Int " ^ (string_of_int n)
+            | Var v          -> "Var \"" ^ v ^ "\""
+            | Call (f, a)    -> "Call (\"" ^ f ^ "\", [ "
                                              ^ (String.concat " ; " (List.map fmt_e a))
                                              ^ " ])"
-            | Assign (v, e) -> "Assign (\"" ^ v ^ "\", " ^ (fmt_e e) ^ ")"
+            | Assign (lv, e) -> "Assign (\"" ^ fmt_lv lv ^ "\", " ^ (fmt_e e) ^ ")"
 
             | Addr v -> "&Var \"" ^ v ^ "\""
-
+        and fmt_lv = function   
+            | LeftVar v        ->  "Var \"" ^ v ^ "\""
+            | LeftAddrValue v  -> "*Var \"" ^ v ^ "\""
         and fmt_i = function
             | Return e      -> "Return (" ^ (fmt_e e) ^ ")"
             | Decl (t,n)    -> "Decl (" ^ t ^ " " ^ n ^  ")"

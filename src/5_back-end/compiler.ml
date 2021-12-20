@@ -22,6 +22,7 @@ let rec compile_expr e env =
 	(* | Value v -> compile_value v *)
 	| Int n  -> [ Li (V0, n) ]
 	| Var v   -> [ Lw (V0, Mem( FP, Env.find v env) ) ]
+    | Addr v   -> [ Addi(V0, FP, Env.find v env) ]
 	| Call (f, args) ->
 		let ca = List.map (fun a ->
 						compile_expr a env
@@ -32,18 +33,23 @@ let rec compile_expr e env =
 				@ [ Jal f;
 	   				Addi (SP, SP, 4 * (List.length args)) ]
 	| Assign (lv, e) ->
-		compile_expr e env
-		@ [ Sw (V0, Mem( FP, Env.find lv env)) ]
-		(* @ (match lv with
-			| LVar  v -> [ Sw (V0, Env.find v env) ]
-			| LAddr a -> []
+		(* compile_expr e env
+		@ [ Sw (V0, Mem( FP, Env.find lv env)) ] *)
+        compile_expr e env
+		@ (match lv with
+			| LeftVar  v -> [ Sw (V0, Mem( FP, Env.find v env) ) ]
+			| LeftAddrValue a -> 
+                            [ Lw (T0, Mem( FP, Env.find a env) ) 
+                            ; Sw (V0, Mem( T0, 0))  ] )
+
+            (* []
 						@ [ Addi (SP, SP, -4)
 						; Sw (V0, Mem (SP, 0)) ]
 						@ compile_expr a env
 						@ [ Lw (T0, Mem (SP, 0))
 						; Addi (SP, SP, 4)
-						; Sw (T0, Mem (V0, 0)) ])  *)
-    | Addr v   -> [ Addi(V0, FP, Env.find v env) ]
+						; Sw (T0, Mem (V0, 0)) ]) 
+     *)
 
 let rec compile_instr i info =
     match i with

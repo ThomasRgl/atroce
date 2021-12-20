@@ -1,6 +1,7 @@
 %{
     open Ast
     open Ast.Syntax
+
 %}
 
 %token <int> Lint
@@ -71,46 +72,42 @@ instr:
 | a = declInstr;   Lsc { a }
 | a = ifthenelseInstr  { a }
 | a = loopInstr        { a }
+| a = exprInstr;  Lsc  { a }
 /* | a = expr; Lsc  { [Expr { expr = a; pos = $startpos(a) }] }  */ (*This is not clean, but this is the only way I found to parse the pointers *)
-| a = lvarExpr; Lsc  { [Expr { expr = a; pos = $startpos(a) }] } 
-| a = callExpr; Lsc  { [Expr { expr = a; pos = $startpos(a) }] } 
+(*| a = assignExpr; Lsc  { [Expr { expr = a; pos = $startpos(a) }] } 
+| a = callExpr; Lsc    { [Expr { expr = a; pos = $startpos(a) }] } *)
 ;
 
 
 
 expr:
-| a = intExpr  { a }
-| a = opExpr   { a }
-| a = valueAdrrExpr { a }
-| a = callExpr { a }
-| a = lvarExpr { a }
+| a = opExpr         { a }
+| a = intExpr        { a }
+| a = varExpr        { a }
+| a = addrExpr       { a }
+| a = valueAdrrExpr  { a }
+| a = callExpr       { a }
+| a = assignExpr     { a }
 
 ;
 
 
-lvar:
-| a = assignVar { a }
-| a = addrExpr { a }
-| a = varExpr   { a }
+lvalue:
+| a = leftValueAdrrExpr { a }
+| a = leftVar   { a }
 ;
  
 
 
-(* lvar *)
-
-assignVar: 
-| v = Lvar; Lassign; b = expr { 
-    Assign { name = v; expr = b; pos = $startpos($2) } };
-
-addrExpr:
-| Lesp; v = Lvar { Addr{ name = v; pos = $startpos(v) }   };
-
-varExpr : v = Lvar { 
-    Var { name = v; pos = $startpos(v) } };
+(* lvalue *)
 
 
+leftValueAdrrExpr:
+| Lmul; v = Lvar { LeftAddrValue{ name = v; pos = $startpos($1)  } };
 
- 
+leftVar :
+| v = Lvar { LeftVar{ name = v; pos = $startpos(v)  } };
+
 
 
 
@@ -132,9 +129,10 @@ opExpr  :
 (*| a = expr; Lor;   b = expr {  } todo*)
 ;
 
+intExpr  : n = Lint { Int { value = n ; pos = $startpos(n) } };
+varExpr : n = Lvar { Var { name  = n ; pos = $startpos(n) } };
 
-valueAdrrExpr:
-| Lmul; v = Lvar { Call {  func = "_valueAdrr";  args = [Lvar{ lvar = Var {name=v; pos = $startpos(v) } ; pos = $startpos(v) } ]; pos = $startpos(v) } } 
+
 
 callExpr : 
 | f = Lvar; Lopar; args = separated_list(Lcomma, expr) ;Lcpar {
@@ -142,10 +140,21 @@ callExpr :
 }
 ;
 
+addrExpr:
+| Lesp; v = Lvar { 
+    Addr{ name = v; pos = $startpos(v) }   
+}
+;
+
+valueAdrrExpr:
+| Lmul; v = Lvar { Call {  func = "_valueAdrr";  args = [ Var {name=v; pos = $startpos(v) }  ]; pos = $startpos(v) } } 
+;
+
+assignExpr: 
+| l = lvalue; Lassign; b = expr { 
+    Assign { lvalue = l; expr = b; pos = $startpos($2) } };
 
 
-intExpr  : n = Lint { Int { value = n ; pos = $startpos(n) } };
-lvarExpr : n = lvar { Lvar{ lvar  = n ; pos = $startpos(n) } };
 
 
 
@@ -153,33 +162,41 @@ lvarExpr : n = lvar { Lvar{ lvar  = n ; pos = $startpos(n) } };
 
 
 declInstr:
-| type_ = Lvar; l = separated_nonempty_list(Lcomma, lvar) { 
+| type_ = Lvar; l = separated_nonempty_list(Lcomma, expr) { 
     List.flatten ( 
         List.map (fun e ->  (match e with 
                         | Var v    -> 
                             [ Decl{ type_ = type_; var = v.name; pos = $startpos(type_) } ] 
                         | Assign a -> 
-                            let decl = [ Decl{ type_ = type_; var = a.name; pos = $startpos(type_) } ] in 
-                            let mylvar    =  Lvar{ lvar = e; pos = $startpos(l) } in 
-                            let myvarExpr =  [ Expr{ expr = mylvar; pos = $startpos(l) } ] in 
-                            decl @ myvarExpr;
-                        | Addr a   ->
-                            [ Decl{ type_ = type_; var = a.name; pos = $startpos(type_) } ] 
+                            let name = (match a.lvalue with 
+                                        | LeftVar v -> v.name
+                                        | _ -> "error" (*raise (Error  "should never happend "  )*) ) in 
+                            let decl = [ Decl{ type_ = type_; var = name; pos = $startpos(type_) } ] in 
+                            let myexpr = [ Expr{ expr = e; pos = $startpos(l)} ] in 
+                            (*let mylvar    =  Var{ lvalue = a.lvalue; pos = $startpos(l) } in 
+                            let myvarExpr =  [ Expr{ expr = mylvar; pos = $startpos(l) } ] in *)
+                            decl @  myexpr
+                        | _ -> []
+                            (* raise (Error  "error undeclared "  ) *)
                         )) l )
 }
 
-| type_ = Lvar; Lmul; l = separated_nonempty_list(Lcomma, lvar) { 
+| type_ = Lvar; Lmul; l = separated_nonempty_list(Lcomma, expr) { 
     List.flatten ( 
         List.map (fun e ->  (match e with 
                         | Var v    -> 
                             [ Decl{ type_ = type_^""; var = v.name; pos = $startpos(type_) } ] 
                         | Assign a -> 
-                            let decl = [ Decl{ type_ = type_; var = a.name; pos = $startpos(type_) } ] in 
-                            let mylvar    =  Lvar{ lvar = e; pos = $startpos(l) } in 
-                            let myvarExpr =  [ Expr{ expr = mylvar; pos = $startpos(l) } ] in 
-                            decl @ myvarExpr;
-                        | Addr a   ->
-                            [ Decl{ type_ = type_; var = a.name; pos = $startpos(type_) } ] 
+                            let name = (match a.lvalue with 
+                                        | LeftVar v -> v.name
+                                        | _ -> "error" (* raise (Error  "should never happend "  )*)  )in 
+                            let decl = [ Decl{ type_ = type_^""; var = name; pos = $startpos(type_) } ] in 
+                            let myexpr = [ Expr{ expr = e; pos = $startpos(l)} ] in 
+                            (*let mylvar    =  Var{ lvalue = a.lvalue; pos = $startpos(l) } in 
+                            let myvarExpr =  [ Expr{ expr = mylvar; pos = $startpos(l) } ] in *)
+                            decl @  myexpr
+                        | _ -> []
+                            (* raise (Error "error undeclared "  )*)
                         )) l )
 } 
 ;
@@ -201,6 +218,12 @@ loopInstr:
     [ Loop { cond = cond; block = b; pos = $startpos($1) } ]
 }   
 ;
+
+exprInstr: 
+| e  = expr { [ Expr{ expr = e; pos = $startpos(e) } ] }
+
+
+
 
 (* Def; *)
 

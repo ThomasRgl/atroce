@@ -12,9 +12,11 @@ exception Error of string * Lexing.position
 
 let expr_pos expr =
     match expr with 
-    | Syntax.Int n  -> n.pos
-    | Syntax.Lvar v  -> v.pos
-    | Syntax.Call c -> c.pos
+    | Syntax.Int    n -> n.pos
+    | Syntax.Call   c -> c.pos
+    | Syntax.Var    c -> c.pos
+    | Syntax.Assign c -> c.pos
+    | Syntax.Addr   c -> c.pos
 
 let errt expected given pos =
     raise (Error (Printf.sprintf "expected %s but given %s"
@@ -27,7 +29,6 @@ let errt expected given pos =
 let rec analyze_expr expr l_env g_env =
     match expr with
     | Syntax.Int  n  -> Int n.value,  (Builtin_t "int" ), l_env
-    | Syntax.Lvar v -> analyze_lvar v.lvar l_env g_env
     | Syntax.Call c ->
         (match Env.find_opt c.func g_env with
         | Some (Func_t (func_type, params_type)) ->
@@ -41,29 +42,36 @@ let rec analyze_expr expr l_env g_env =
             Call (c.func, args), func_type, l_env
         | Some _ -> raise (Error (Printf.sprintf "'%s' is not a function" c.func, c.pos))
         | None -> raise (Error (Printf.sprintf "undefined function '%s'" c.func, c.pos)))
-    
-and  analyze_lvar var l_env g_env = 
-    match var with 
     | Syntax.Var v ->
         if Env.mem v.name l_env then
             Var v.name, Env.find v.name l_env, l_env
         else
             raise (Error (Printf.sprintf "unbound variable '%s'" v.name, v.pos))
-
     | Syntax.Assign a ->
-    (* verifier que la var existe *)
-    (* verifier que la var est du bon type *)
-        (match Env.find_opt a.name l_env with
-        | Some (Builtin_t v) ->
-                    let ae, et, l_env = analyze_expr a.expr l_env g_env in
-                    Assign (a.name, ae), (Builtin_t v ) ,l_env
-        (* | Some _ -> raise (Error (Printf.sprintf "'%s' is not a variable" a.var, a.pos)) *)
-        | None -> raise (Error (Printf.sprintf "'%s' undeclared " a.name , a.pos)) )
+        let ae, et, l_env = analyze_expr a.expr l_env g_env in
+        let alv, lvt, l_env = analyze_lvalue a.lvalue l_env g_env in
+        Assign (alv, ae),  lvt  ,l_env
     | Syntax.Addr v ->
         if Env.mem v.name l_env then
             Addr v.name, Env.find v.name l_env, l_env
         else
             raise (Error (Printf.sprintf "unbound variable '%s'" v.name, v.pos))
+
+and analyze_lvalue lvalue l_env g_env =
+    match lvalue with
+    | Syntax.LeftVar v ->
+        (match Env.find_opt v.name l_env with
+        | Some (Builtin_t t) ->
+                    LeftVar (v.name), (Builtin_t t ) ,l_env
+        | None -> raise (Error (Printf.sprintf "'%s' undeclared " v.name , v.pos)) )
+
+    | Syntax.LeftAddrValue v ->
+        (match Env.find_opt v.name l_env with
+        | Some (Builtin_t t) ->
+                    LeftAddrValue (v.name), (Builtin_t t ) ,l_env
+        | None -> raise (Error (Printf.sprintf "'%s' undeclared " v.name , v.pos)) )
+
+
 
 
 let rec analyze_instr instr l_env g_env =
