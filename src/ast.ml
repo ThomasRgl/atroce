@@ -55,6 +55,7 @@ module Syntax = struct
                     ; pos: Lexing.position }
         | Return of { expr: expr
                     ; pos: Lexing.position }
+        | Break of { pos: Lexing.position }
         | Cond   of { cond: expr
                     ; then_: block 
                     ; else_: block
@@ -94,6 +95,7 @@ module IR = struct
     type instr =
         | Expr   of expr
         | Return of expr
+        | Break 
         | Decl   of ident * ident 
         | Cond   of expr * block * block
         | Loop   of expr * block  
@@ -116,8 +118,9 @@ module IR = struct
             | Addr v -> "&Var \"" ^ v ^ "\""
         and fmt_lv = function   
             | LeftVar v        ->  "Var \"" ^ v ^ "\""
-            | LeftAddrValue (v, o)  -> "*Var \"" ^ v ^ "\" [" ^ fmt_e o ^ "]"
+            | LeftAddrValue (v,o)  -> "*Var \"" ^ v ^ "\" [" ^ fmt_e o ^ "]"
         and fmt_i = function
+            | Break         -> "Break"
             | Return e      -> "Return (" ^ (fmt_e e) ^ ")"
             | Decl (t,n)    -> "Decl (" ^ t ^ " " ^ n ^  ")"
             | Cond (c,t,e)  -> "If (" ^ fmt_e c ^  ") { \n" ^ fmt_b t ^ "\n } \n else {" ^ fmt_b e ^ "}" 

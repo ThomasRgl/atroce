@@ -29,3 +29,6 @@ let () =
     	err "syntax error" (Lexing.lexeme_start_p buf)
   	| Semantics.Error (msg, pos) ->
     	err msg pos
+    | _ ->  exit 1
+    (* | Compiler.Error (msg) ->
+    	Printf.eprintf "Error : %s.\n" msg; exit 1 *)

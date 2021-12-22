@@ -76,7 +76,7 @@ and analyze_lvalue lvalue l_env g_env =
 
 
 
-let rec analyze_instr instr l_env g_env =
+let rec analyze_instr instr l_env g_env break =
     match instr with
     | Syntax.Decl d ->
         if Env.mem d.var l_env then
@@ -88,24 +88,30 @@ let rec analyze_instr instr l_env g_env =
     | Syntax.Return r ->
         let ae, _, _ = analyze_expr r.expr l_env g_env in
         Return ae, l_env, g_env
+    | Syntax.Break b ->
+        if break != 0 then 
+            Break, l_env, g_env
+        else 
+            raise (Error (Printf.sprintf "break statement not within loop or switch", b.pos))
+        
     | Syntax.Cond aa ->
         let c, _   , l_env = analyze_expr  aa.cond  l_env g_env in 
-        let t,l_env, g_env = analyze_block aa.then_ l_env g_env in 
-        let e,l_env, g_env = analyze_block aa.else_ l_env g_env in 
+        let t,l_env, g_env = analyze_block aa.then_ l_env g_env break in 
+        let e,l_env, g_env = analyze_block aa.else_ l_env g_env break in 
         Cond( c, t, e ), l_env, g_env
     | Syntax.Loop l ->
-        let c, _, l_env     = analyze_expr l.cond   l_env g_env in 
-        let b, l_env, g_env = analyze_block l.block l_env g_env in 
+        let c, _, l_env     = analyze_expr  l.cond  l_env g_env   in 
+        let b, l_env, g_env = analyze_block l.block l_env g_env 1 in 
         Loop( c, b ), l_env, g_env
     | Syntax.Expr e ->
         let ae, _, l_env = analyze_expr e.expr l_env g_env in
         Expr( ae ), l_env, g_env
-and analyze_block block l_env g_env =
+and analyze_block block l_env g_env break =
     match block with
     | [] -> [], l_env, g_env
     | instr :: rest ->
-        let ai, l_env, g_env = analyze_instr instr l_env g_env in
-        let ab, l_env, g_env = analyze_block rest  l_env g_env in
+        let ai, l_env, g_env = analyze_instr instr l_env g_env break in
+        let ab, l_env, g_env = analyze_block rest  l_env g_env break in
         ai :: ab, l_env, g_env
 
 let rec analyse_params params l_env =
@@ -126,7 +132,7 @@ let rec analyze_func def l_env g_env =
         let params, new_l_env = analyse_params f.params Env.empty in 
         let params_type = List.map (fun param -> ( match param with Param(a,b) -> (Builtin_t a ) )) params in 
         let g_env = Env.add f.name  ( Func_t (Builtin_t f.type_, params_type )) g_env in
-        let ab, _ , g_env = analyze_block f.block new_l_env g_env in
+        let ab, _ , g_env = analyze_block f.block new_l_env g_env 0 in
         let ad = Func( f.type_,  f.name, params, ab ) in
         let af, l_env, g_env = analyze_func rest l_env g_env in 
         [ad] @ af, l_env, g_env

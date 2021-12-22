@@ -73,6 +73,7 @@ instr:
 | a = ifthenelseInstr  { a }
 | a = loopInstr        { a }
 | a = exprInstr;  Lsc  { a }
+| a = breakInstr;  Lsc  { a }
 /* | a = expr; Lsc  { [Expr { expr = a; pos = $startpos(a) }] }  */ (*This is not clean, but this is the only way I found to parse the pointers *)
 (*| a = assignExpr; Lsc  { [Expr { expr = a; pos = $startpos(a) }] } 
 | a = callExpr; Lsc    { [Expr { expr = a; pos = $startpos(a) }] } *)
@@ -209,6 +210,12 @@ declInstr:
 returnInstr: 
 | Lreturn; e = expr {
   [ Return {  expr = e; pos = $startpos($1) } ]
+}
+;
+
+breakInstr:
+| Lbreak  {
+  [ Break {  pos = $startpos($1) } ]
 }
 ;
 

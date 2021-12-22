@@ -8,7 +8,8 @@ type cinfo = { code: Mips.instr list
 			 ; env: int Env.t
 			 ; fpo: int
 			 ; counter: int
-			 ; return: string }
+			 ; return: string 
+             ; break: string }
 
 (* let compile_value v =
   match v with
@@ -70,6 +71,13 @@ let rec compile_instr i info =
         code = info.code
                 @ compile_expr e info.env
                 @ [ B info.return ] }
+    | Break  ->
+        { info with
+                code = info.code
+                    @ [ B info.break ] }
+                    
+        
+        
     | Expr e ->
 	    { info with
 	        code = info.code
@@ -92,8 +100,10 @@ let rec compile_instr i info =
         ; counter = ce.counter }
     | Loop (c, b) -> 
         let uniq = string_of_int info.counter in
+        let oldBreakpoint = info.break in 
         let cb = compile_block b { info with code = []
-										; counter = info.counter + 1 } in
+										; counter = info.counter + 1 
+                                        ; break = "endloop" ^ uniq } in
         { info with
         code = info.code
                 @ [ Label ("condLoop" ^ uniq) ]
@@ -102,7 +112,8 @@ let rec compile_instr i info =
                 @ cb.code
                 @ [ B ("condLoop" ^ uniq) ]
                 @ [ Label ("endloop" ^ uniq) ]
-        ; counter = cb.counter }
+        ; counter = cb.counter 
+        ; break = oldBreakpoint }
 
 and compile_block b info =
     match b with
@@ -125,7 +136,8 @@ let compile_def (Func (type_,name, params, b)) counter =
 						Env.empty (List.mapi (fun i a -> i + 1, a) args)
 			    ; fpo = 8
 			    ; counter = counter + 1
-			    ; return = "ret" ^ (string_of_int counter) }
+			    ; return = "ret" ^ (string_of_int counter) 
+                ; break = "" }
   in cb.counter,
 	 []
 	 @ [ Label name
