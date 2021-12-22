@@ -5,6 +5,9 @@ all :
 
 explain : 
 	menhir --explain src/1_syntactic_analysis/parser.mly
+	rm src/1_syntactic_analysis/parser.ml
+	rm src/1_syntactic_analysis/parser.mli
+	mv src/1_syntactic_analysis/parser.conflicts .
 
 launch : 
 	./test.byte tests/5.test > test.asm

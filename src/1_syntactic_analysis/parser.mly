@@ -21,14 +21,14 @@
 %token Lend
 %token LToDo
 
-
 %left Lassign;
 %left Land Lor;
 %left Leq Lneq Llt Lgt Lle Lge;
+%left Lptr
 %left Ladd Lsub;
 %left Lmul Ldiv;
+
 %right Lesp
-%right Lptr
 
 %start prog
 
@@ -86,6 +86,7 @@ expr:
 | a = varExpr        { a }
 | a = addrExpr       { a }
 | a = valueAdrrExpr  { a }
+| a = dmaExpr        { a }  (*direct memory acess*)
 | a = callExpr       { a }
 | a = assignExpr     { a }
 
@@ -95,6 +96,7 @@ expr:
 lvalue:
 | a = leftValueAdrrExpr { a }
 | a = leftVar   { a }
+| a = leftdma   { a }
 ;
  
 
@@ -103,12 +105,13 @@ lvalue:
 
 
 leftValueAdrrExpr:
-| Lptr; v = Lvar { LeftAddrValue{ name = v; pos = $startpos($1)  } };
+| Lptr; v = Lvar { LeftAddrValue{ name = v; offset = Int { value = 0 ; pos = $startpos(v) }; pos = $startpos($1)  } };
 
 leftVar :
 | v = Lvar { LeftVar{ name = v; pos = $startpos(v)  } };
 
-
+leftdma :
+| v = Lvar; Lobrack; e = expr; Lcbrack { LeftAddrValue{ name = v; offset = e ; pos = $startpos(v)  } };
 
 
 (* Expr *)
@@ -131,7 +134,9 @@ opExpr  :
 
 intExpr  : n = Lint { Int { value = n ; pos = $startpos(n) } };
 varExpr : n = Lvar { Var { name  = n ; pos = $startpos(n) } };
-
+ 
+dmaExpr :
+| v = Lvar; Lobrack; e = expr; Lcbrack { Call {  func = "_valueAdrr";  args = [ Call {  func = "_add";  args = [ Var {name=v; pos = $startpos(v) }; Call {  func = "_mul"; args = [e ; Int { value = 4 ; pos = $startpos(v) }]; pos = $startpos(e) } ]; pos = $startpos(v) } ]; pos = $startpos(v) } } 
 
 
 callExpr : 

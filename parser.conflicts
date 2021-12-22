@@ -1,0 +1,41 @@
+
+** Conflict (reduce/reduce) in state 70.
+** Tokens involved: Lsub Lsc Lneq Lmul Llt Lle Lgt Lge Leq Ldiv Lcomma Lassign Ladd
+** The following explanations concentrate on token Lsub.
+** This state is reached from prog after reading:
+
+Lvar Lvar Lopar loption(separated_nonempty_list(Lcomma,param)) Lcpar Lobrace Lvar Lptr Lvar
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+prog 
+def prog 
+funcDef 
+Lvar Lvar Lopar loption(separated_nonempty_list(Lcomma,param)) Lcpar Lobrace block Lcbrace 
+                                                                             list(instr) 
+                                                                             instr list(instr) 
+                                                                             declInstr Lsc 
+                                                                             (?)
+
+** In state 70, looking ahead at Lsub, reducing production
+** valueAdrrExpr -> Lptr Lvar
+** is permitted because of the following sub-derivation:
+
+Lvar separated_nonempty_list(Lcomma,expr) 
+     expr 
+     opExpr 
+     expr Lsub expr // lookahead token appears
+     valueAdrrExpr // lookahead token is inherited
+     Lptr Lvar . 
+
+** In state 70, looking ahead at Lsub, reducing production
+** varExpr -> Lvar
+** is permitted because of the following sub-derivation:
+
+Lvar Lptr separated_nonempty_list(Lcomma,expr) 
+          expr 
+          opExpr 
+          expr Lsub expr // lookahead token appears
+          varExpr // lookahead token is inherited
+          Lvar . 

@@ -21,8 +21,9 @@ let nom_provisoire =
 			; "puti", Func_t (Builtin_t "void", [ Builtin_t "int"  ])
 			; "puts", Func_t (Builtin_t "void", [ Builtin_t "int"  ])
 
-            ; "_adrr"      , Func_t (Builtin_t "int", [ Builtin_t "int" ])
             ; "_valueAdrr" , Func_t (Builtin_t "int", [ Builtin_t "int" ])
+
+            ; "malloc" , Func_t (Builtin_t "int", [ Builtin_t "int" ])
 		])
 
 let _type_ =
@@ -43,7 +44,7 @@ let builtins =
 	; Label "_sub"
 	; Lw (T0, Mem (SP, 0))
 	; Lw (T1, Mem (SP, 4))
-	; Sub (V0, T0, T1)
+	; Sub (V0, T1, T0)
 	; Jr RA
 
 	; Label "_mul"
@@ -139,7 +140,14 @@ let builtins =
     ; Label "_valueAdrr"
 	; Lw (T0, Mem (SP, 0))
     ; Lw (V0, Mem (T0, 0))
-    ; Li (V0, 90)
+	; Jr RA
+
+    ; Label "malloc"
+	; Lw (A0, Mem (SP, 0))
+    ; Li (T0, 4)
+    ; Mul( A0, A0, T0)
+	; Li (V0, Syscall.sbrk)
+	; Syscall
 	; Jr RA
 
 

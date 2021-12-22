@@ -68,8 +68,10 @@ and analyze_lvalue lvalue l_env g_env =
     | Syntax.LeftAddrValue v ->
         (match Env.find_opt v.name l_env with
         | Some (Builtin_t t) ->
-                    LeftAddrValue (v.name), (Builtin_t t ) ,l_env
+                    let e, _, l_env = analyze_expr v.offset l_env g_env in 
+                    LeftAddrValue (v.name, e), (Builtin_t t ) ,l_env
         | None -> raise (Error (Printf.sprintf "'%s' undeclared " v.name , v.pos)) )
+    
 
 
 

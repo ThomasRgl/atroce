@@ -38,9 +38,17 @@ let rec compile_expr e env =
         compile_expr e env
 		@ (match lv with
 			| LeftVar  v -> [ Sw (V0, Mem( FP, Env.find v env) ) ]
-			| LeftAddrValue a -> 
-                            [ Lw (T0, Mem( FP, Env.find a env) ) 
-                            ; Sw (V0, Mem( T0, 0))  ] )
+			| LeftAddrValue (v, o) -> 
+                            [ Move( T2, V0 ) ] @
+                            compile_expr o env @
+                            [ Move( T0, V0 ) 
+                            ; Li (T1, 4)
+                            ; Mul( T0, T0, T1)                   (* T0 contient l'index du tableau *) 
+                            ; Lw (T1, Mem( FP, Env.find v env))  (* T1 contient l'adresse du tableau *) 
+                            ; Add (T0, T0, T1)                   (* T0 contient l'adresse de l'index souhaité *) 
+                            ; Sw (T2, Mem( T0, 0))
+                            ])
+                            
 
             (* []
 						@ [ Addi (SP, SP, -4)

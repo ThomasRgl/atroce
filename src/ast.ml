@@ -45,8 +45,9 @@ module Syntax = struct
     and lvalue =  
         | LeftVar of { name: ident
                      ; pos: Lexing.position }
-        | LeftAddrValue of { name: ident
-                           ; pos: Lexing.position }
+        | LeftAddrValue of {  name: ident
+                            ; offset: expr 
+                            ; pos: Lexing.position }
 
     type instr =
         | Decl of 	{ type_: ident
@@ -88,7 +89,7 @@ module IR = struct
         | Assign of lvalue * expr
     and lvalue =
         | LeftVar       of ident
-        | LeftAddrValue of ident
+        | LeftAddrValue of ident * expr
 
     type instr =
         | Expr   of expr
@@ -115,7 +116,7 @@ module IR = struct
             | Addr v -> "&Var \"" ^ v ^ "\""
         and fmt_lv = function   
             | LeftVar v        ->  "Var \"" ^ v ^ "\""
-            | LeftAddrValue v  -> "*Var \"" ^ v ^ "\""
+            | LeftAddrValue (v, o)  -> "*Var \"" ^ v ^ "\" [" ^ fmt_e o ^ "]"
         and fmt_i = function
             | Return e      -> "Return (" ^ (fmt_e e) ^ ")"
             | Decl (t,n)    -> "Decl (" ^ t ^ " " ^ n ^  ")"
