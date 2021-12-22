@@ -96,8 +96,8 @@ let rec analyze_instr instr l_env g_env break =
         
     | Syntax.Cond aa ->
         let c, _   , l_env = analyze_expr  aa.cond  l_env g_env in 
-        let t,l_env, g_env = analyze_block aa.then_ l_env g_env break in 
-        let e,l_env, g_env = analyze_block aa.else_ l_env g_env break in 
+        let t, _ , g_env = analyze_block aa.then_ l_env g_env break in 
+        let e, _ , g_env = analyze_block aa.else_ l_env g_env break in 
         Cond( c, t, e ), l_env, g_env
     | Syntax.Loop l ->
         let c, _, l_env     = analyze_expr  l.cond  l_env g_env   in 
