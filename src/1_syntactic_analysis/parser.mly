@@ -176,13 +176,13 @@ declInstr:
                         | Assign a -> 
                             let name = (match a.lvalue with 
                                         | LeftVar v -> v.name
-                                        | _ -> "error" (*raise (Error  "should never happend "  )*) ) in 
+                                        | _ -> raise (Semantics.Error  ("should never happend ", $startpos(type_))  ) )in 
                             let decl = [ Decl{ type_ = type_; var = name; pos = $startpos(type_) } ] in 
                             let myexpr = [ Expr{ expr = e; pos = $startpos(l)} ] in 
                             (*let mylvar    =  Var{ lvalue = a.lvalue; pos = $startpos(l) } in 
                             let myvarExpr =  [ Expr{ expr = mylvar; pos = $startpos(l) } ] in *)
                             decl @  myexpr
-                        | _ -> []
+                        | _ -> raise (Semantics.Error  ("error undeclared ????  ", $startpos(type_))  )
                             (* raise (Error  "error undeclared "  ) *)
                         )) l )
 }
@@ -195,13 +195,13 @@ declInstr:
                         | Assign a -> 
                             let name = (match a.lvalue with 
                                         | LeftVar v -> v.name
-                                        | _ -> "error" (* raise (Error  "should never happend "  )*)  )in 
+                                        | _ -> raise (Semantics.Error  ("should never happend ", $startpos(type_))  )  )in 
                             let decl = [ Decl{ type_ = type_^""; var = name; pos = $startpos(type_) } ] in 
                             let myexpr = [ Expr{ expr = e; pos = $startpos(l)} ] in 
                             (*let mylvar    =  Var{ lvalue = a.lvalue; pos = $startpos(l) } in 
                             let myvarExpr =  [ Expr{ expr = mylvar; pos = $startpos(l) } ] in *)
                             decl @  myexpr
-                        | _ -> []
+                        | _ -> raise (Semantics.Error  ("error undeclared ????  ", $startpos(type_))  )
                             (* raise (Error "error undeclared "  )*)
                         )) l )
 } 
