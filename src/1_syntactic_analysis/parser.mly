@@ -13,7 +13,7 @@
 %token Leq Lneq Llt Lle Lgt Lge 
 %token Lopar Lcpar Lobrace Lcbrace Lobrack Lcbrack
 %token Lassign
-%token Lesp Lptr
+%token Lesp Lptr Ldeclptr
 
 %token Lwhile Lfor Ldo Lbreak Lif Lelse 
 %token Lreturn 
@@ -24,11 +24,11 @@
 %left Lassign;
 %left Land Lor;
 %left Leq Lneq Llt Lgt Lle Lge;
-%left Lptr
 %left Ladd Lsub;
 %left Lmul Ldiv;
-
-%right Lesp
+%right Lesp;
+%left Lptr;
+%left Ldeclptr;
 
 %start prog
 
@@ -187,7 +187,8 @@ declInstr:
                         )) l )
 }
 
-| type_ = Lvar; Lptr; l = separated_nonempty_list(Lcomma, expr) { 
+
+| type_ = Lvar; Ldeclptr; l = separated_nonempty_list(Lcomma, expr) { 
     List.flatten ( 
         List.map (fun e ->  (match e with 
                         | Var v    -> 
@@ -204,12 +205,12 @@ declInstr:
                         | _ -> raise (Semantics.Error  ("error undeclared ????  ", $startpos(type_))  )
                             (* raise (Error "error undeclared "  )*)
                         )) l )
-} 
+}  
 ;
 
 returnInstr: 
 | Lreturn; e = expr {
-  [ Return {  expr = e; pos = $startpos($1) } ]
+  [ Return {  expr = e; pos = $startpos($1) } ] 
 }
 ;
 

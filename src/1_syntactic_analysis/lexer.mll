@@ -42,7 +42,8 @@ rule token = parse
 | "||"     { Lor }    
 | "->"     { LToDo } 
 | "&"      { Lesp }               
-| "µ"      { Lptr }   
+| "!"      { Lptr } 
+| "^"      { Ldeclptr }   
 
 (* Keywords *)
 
