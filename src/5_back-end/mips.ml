@@ -106,3 +106,4 @@ let print_asm oc asm =
   List.iter (fun i -> Printf.fprintf oc "%s\n" (fmt_instr i)) asm.text ;
   Printf.fprintf oc "\n.data\n" ;
   List.iter (fun (l, d) -> Printf.fprintf oc "%s: %s\n" l (fmt_dir d)) asm.data
+

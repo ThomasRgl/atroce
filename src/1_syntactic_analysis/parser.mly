@@ -102,6 +102,9 @@ lvalue:
  
 
 
+(* decl *)
+
+
 (* lvalue *)
 
 
@@ -166,46 +169,28 @@ assignExpr:
 
 (* Instr *)
 
+decl : 
+|  p = list(Ldeclptr); v = Lvar;  { (p, v, 0, Int { value = 0 ; pos = $startpos(p) } ) }
+|  p = list(Ldeclptr); pair = separated_pair(Lvar,Lassign, expr )  { let (var, assign) = pair in  (p, var, 1, assign) }
+
 
 declInstr:
-/* | type_ = Lvar; l = separated_nonempty_list(Lcomma, expr) { 
+| type_ = Lvar;  l = separated_nonempty_list(Lcomma, decl ) { 
+   
     List.flatten ( 
-        List.map (fun e ->  (match e with 
-                        | Var v    -> 
-                            [ Decl{ type_ = type_; var = v.name; pos = $startpos(type_) } ] 
-                        | Assign a -> 
-                            let name = (match a.lvalue with 
-                                        | LeftVar v -> v.name
-                                        | _ -> raise (Semantics.Error  ("should never happend ", $startpos(type_))  ) )in 
-                            let decl = [ Decl{ type_ = type_; var = name; pos = $startpos(type_) } ] in 
-                            let myexpr = [ Expr{ expr = e; pos = $startpos(l)} ] in 
-                            (*let mylvar    =  Var{ lvalue = a.lvalue; pos = $startpos(l) } in 
-                            let myvarExpr =  [ Expr{ expr = mylvar; pos = $startpos(l) } ] in *)
-                            decl @  myexpr
-                        | _ -> raise (Semantics.Error  ("error undeclared ????  ", $startpos(type_))  )
-                            (* raise (Error  "error undeclared "  ) *)
-                        )) l )
-} */
-
-
-| type_ = Lvar; p = list(Ldeclptr); l = separated_nonempty_list(Lcomma, expr) { 
-    let varType = type_to_type type_ p in 
-    List.flatten ( 
-        List.map (fun e ->  (match e with 
-                        | Var v    -> 
-                            [ Decl{ type_ = varType; var = v.name; pos = $startpos(type_) } ] 
-                        | Assign a -> 
-                            let name = (match a.lvalue with 
-                                        | LeftVar v -> v.name
-                                        | _ -> raise (Semantics.Error  ("should never happend ", $startpos(type_))  )  )in 
-                            let decl = [ Decl{ type_ = varType; var = name; pos = $startpos(type_) } ] in 
-                            let myexpr = [ Expr{ expr = e; pos = $startpos(l)} ] in 
-                            (*let mylvar    =  Var{ lvalue = a.lvalue; pos = $startpos(l) } in 
-                            let myvarExpr =  [ Expr{ expr = mylvar; pos = $startpos(l) } ] in *)
-                            decl @  myexpr
-                        | _ -> raise (Semantics.Error  ("error undeclared ????  ", $startpos(type_))  )
-                            (* raise (Error "error undeclared "  )*)
-                        )) l )
+        List.map (fun d ->  (
+            
+            let (p, var, bol, e ) = d in 
+            let varType = type_to_type type_ p in 
+            if bol = 1 then
+                let decl = [ Decl{ type_ = varType; var = var; pos = $startpos(type_) } ] in 
+                let l = LeftVar{ name = var; pos = $startpos(l)  } in 
+                let assign = Assign { lvalue = l; expr = e; pos = $startpos(l) } in 
+                let myexpr = [ Expr{ expr = assign; pos = $startpos(l)} ] in 
+                decl @  myexpr
+            else 
+                [ Decl{ type_ = varType; var = var; pos = $startpos(type_) } ]  )) l )
+             
 }  
 ;
 

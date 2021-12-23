@@ -18,11 +18,13 @@ let () =
 	try
     	let parsed = Parser.prog Lexer.token buf in
     	close_in f ;
+        let oc = open_out "test.asm" in
     	let ast = Semantics.analyze parsed in
-        print_endline("HALLO");
-    	print_endline (IR.string_of_ir ast);
+    	(* print_endline (IR.string_of_ir ast); *)
 		let compiled = Compiler.compile ast in
-    	Mips.print_asm Stdlib.stdout compiled
+        Mips.print_asm oc compiled;
+        close_in f ;
+    	(* Mips.print_asm Stdlib.stdout compiled *)
   	with
   	| Lexer.Error c ->
     	err (Printf.sprintf "unrecognized char '%c'" c) (Lexing.lexeme_start_p buf)
@@ -30,6 +32,6 @@ let () =
     	err "syntax error" (Lexing.lexeme_start_p buf)
   	| Semantics.Error (msg, pos) ->
     	err msg pos
-    | _ ->  exit 1
+    (* | _ ->  exit 1 *)
     (* | Compiler.Error (msg) ->
     	Printf.eprintf "Error : %s.\n" msg; exit 1 *)

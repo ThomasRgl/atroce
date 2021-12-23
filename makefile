@@ -10,7 +10,7 @@ explain :
 	mv src/1_syntactic_analysis/parser.conflicts .
 
 launch : 
-	./test.byte tests/5.test > test.asm
+	./test.byte tests/5.test 
 	spim -file test.asm
 
 launch2 : 

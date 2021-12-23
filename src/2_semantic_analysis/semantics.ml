@@ -2,6 +2,7 @@ open Ast
 open Ast.IR
 open Baselib
 
+open Lexing
 exception Error of string * Lexing.position
 
 
@@ -9,6 +10,9 @@ exception Error of string * Lexing.position
 
 
 (* fonctions d'aide à la gestion des erreurs *)
+let warning msg pos =
+	Printf.eprintf "Warning on line %d col %d: %s.\n"
+    	pos.pos_lnum (pos.pos_cnum - pos.pos_bol) msg ;;
 
 let expr_pos expr =
     match expr with 
@@ -24,8 +28,20 @@ let errt expected given pos =
                     (var_of_type given),
                     pos))
 
-(* analyse sémantique *)
 
+(* analyse sémantique *)
+let checkTypes given expected pos = 
+    (if( var_of_type expected = var_of_type given) then
+        true
+    else(
+        if( type_expected expected = type_expected given) then(
+            warning (Printf.sprintf "expected %s but given %s"
+                        (var_of_type expected)
+                        (var_of_type given)) pos;
+            true)
+        else
+            false))
+    
 let rec analyze_expr expr l_env g_env =
     match expr with
     | Syntax.Int  n  -> Int n.value,  (Int_t "int" ), l_env
@@ -39,7 +55,7 @@ let rec analyze_expr expr l_env g_env =
                 raise (Error (Printf.sprintf "expected %d arguments but given %d"
                             (List.length params_type) (List.length c.args), c.pos)) ;
             let args = List.map2 (fun param_type arg -> let a_arg, arg_type, _ = analyze_expr arg l_env g_env
-                                                        in  if arg_type = param_type then a_arg
+                                                        in  if (checkTypes arg_type param_type (expr_pos arg) ) then a_arg
                                                             else errt param_type arg_type (expr_pos arg))
                                 params_type c.args in
             Call (c.func, args), func_type, l_env

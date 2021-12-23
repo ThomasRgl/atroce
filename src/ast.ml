@@ -14,15 +14,15 @@ let rec var_of_type v =
     | Ptr_t n -> (var_of_type n )^"*" 
     | Struct_t n -> n
 
-let  type_of_var v =
+let  type_expected v =
     match v with 
     | Int_t n -> "int"
-    | Ptr_t n -> "ptr" ^ "int ?"
+    | Ptr_t n -> "int"
     | Struct_t n -> "struct"
 
 let rec type_to_type s p = 
     match p with
-    | a :: b -> Ptr_t( type_to_type s p )
+    | a :: b -> Ptr_t( type_to_type s b )
     | []     -> Int_t (s)
 
 let rec string_of_type_t t =
