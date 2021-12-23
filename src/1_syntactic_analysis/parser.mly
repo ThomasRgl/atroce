@@ -168,7 +168,7 @@ assignExpr:
 
 
 declInstr:
-| type_ = Lvar; l = separated_nonempty_list(Lcomma, expr) { 
+/* | type_ = Lvar; l = separated_nonempty_list(Lcomma, expr) { 
     List.flatten ( 
         List.map (fun e ->  (match e with 
                         | Var v    -> 
@@ -185,19 +185,20 @@ declInstr:
                         | _ -> raise (Semantics.Error  ("error undeclared ????  ", $startpos(type_))  )
                             (* raise (Error  "error undeclared "  ) *)
                         )) l )
-}
+} */
 
 
-| type_ = Lvar; Ldeclptr; l = separated_nonempty_list(Lcomma, expr) { 
+| type_ = Lvar; p = list(Ldeclptr); l = separated_nonempty_list(Lcomma, expr) { 
+    let varType = type_to_type type_ p in 
     List.flatten ( 
         List.map (fun e ->  (match e with 
                         | Var v    -> 
-                            [ Decl{ type_ = type_^""; var = v.name; pos = $startpos(type_) } ] 
+                            [ Decl{ type_ = varType; var = v.name; pos = $startpos(type_) } ] 
                         | Assign a -> 
                             let name = (match a.lvalue with 
                                         | LeftVar v -> v.name
                                         | _ -> raise (Semantics.Error  ("should never happend ", $startpos(type_))  )  )in 
-                            let decl = [ Decl{ type_ = type_^""; var = name; pos = $startpos(type_) } ] in 
+                            let decl = [ Decl{ type_ = varType; var = name; pos = $startpos(type_) } ] in 
                             let myexpr = [ Expr{ expr = e; pos = $startpos(l)} ] in 
                             (*let mylvar    =  Var{ lvalue = a.lvalue; pos = $startpos(l) } in 
                             let myvarExpr =  [ Expr{ expr = mylvar; pos = $startpos(l) } ] in *)
@@ -241,8 +242,9 @@ exprInstr:
 (* Def; *)
 
 funcDef: 
-| type_ = Lvar; name = Lvar; Lopar; p = separated_list(Lcomma, param) ; Lcpar; Lobrace; b=block; Lcbrace { 
-    Func { type_ = type_; name = name; params = p; block = b; pos = $startpos(name) }
+| type_ = Lvar; ptr = list(Ldeclptr); name = Lvar; Lopar; p = separated_list(Lcomma, param) ; Lcpar; Lobrace; b=block; Lcbrace { 
+    let varType = type_to_type type_ ptr in 
+    Func { type_ = varType; name = name; params = p; block = b; pos = $startpos(name) }
 }
 ;
 
@@ -259,7 +261,11 @@ nonemptyparams:
 ;
 
 param: 
-| type_ = Lvar; name = Lvar { Param{ type_ = type_; name = name; pos = $startpos(name) } }
+| type_ = Lvar; p = list(Ldeclptr); name = Lvar { 
+    let varType = type_to_type type_ p in
+    Param{ type_ = varType; name = name; pos = $startpos(name) } 
+    
+    }
 ;
 
 /* register $0 toujours à 0 dans mips */

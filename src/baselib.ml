@@ -6,24 +6,24 @@ module Env = Map.Make(String)
 let nom_provisoire =
 	Env.of_seq
 		(List.to_seq
-			[ "_add", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
-			; "_sub", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
-			; "_mul", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
-			; "_div", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
+			[ "_add", Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ])
+			; "_sub", Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ])
+			; "_mul", Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ])
+			; "_div", Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ])
 			
-			; "_eq",  Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
-			; "_neq", Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ]) 
-			; "_lt" , Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
-			; "_le" , Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
-			; "_gt" , Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ]) 
-			; "_ge" , Func_t (Builtin_t "int", [ Builtin_t "int" ; Builtin_t "int" ])
+			; "_eq",  Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ])
+			; "_neq", Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ]) 
+			; "_lt" , Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ])
+			; "_le" , Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ])
+			; "_gt" , Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ]) 
+			; "_ge" , Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ])
 
-			; "puti", Func_t (Builtin_t "void", [ Builtin_t "int"  ])
-			; "puts", Func_t (Builtin_t "void", [ Builtin_t "int"  ])
+			; "puti", Func_t (Int_t "void", [ Int_t "int"  ])
+			; "puts", Func_t (Int_t "void", [ Int_t "int"  ])
 
-            ; "_valueAdrr" , Func_t (Builtin_t "int", [ Builtin_t "int" ])
+            ; "_valueAdrr" , Func_t (Int_t "int", [ Int_t "int" ])
 
-            ; "malloc" , Func_t (Builtin_t "int", [ Builtin_t "int" ])
+            ; "malloc" , Func_t (Int_t "int", [ Int_t "int" ])
 		])
 
 let _type_ =

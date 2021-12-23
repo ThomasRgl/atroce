@@ -19,7 +19,8 @@ let () =
     	let parsed = Parser.prog Lexer.token buf in
     	close_in f ;
     	let ast = Semantics.analyze parsed in
-    	(* print_endline (IR.string_of_ir ast); *)
+        print_endline("HALLO");
+    	print_endline (IR.string_of_ir ast);
 		let compiled = Compiler.compile ast in
     	Mips.print_asm Stdlib.stdout compiled
   	with

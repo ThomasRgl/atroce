@@ -1,14 +1,29 @@
 type var_t =
-    | Builtin_t of string 
+    | Int_t of string
+    | Ptr_t of var_t
+    | Struct_t of string
 
-type type_t =
+type type_t = (* nom à changer !  *)
     | Var_t of var_t
     | Func_t of var_t * var_t list
     (* | Int_t   *)
 
-let  var_of_type v =
+let rec var_of_type v =
     match v with 
-    | Builtin_t b -> b 
+    | Int_t n -> n 
+    | Ptr_t n -> (var_of_type n )^"*" 
+    | Struct_t n -> n
+
+let  type_of_var v =
+    match v with 
+    | Int_t n -> "int"
+    | Ptr_t n -> "ptr" ^ "int ?"
+    | Struct_t n -> "struct"
+
+let rec type_to_type s p = 
+    match p with
+    | a :: b -> Ptr_t( type_to_type s p )
+    | []     -> Int_t (s)
 
 let rec string_of_type_t t =
     match t with
@@ -25,7 +40,7 @@ let rec string_of_type_t t =
 module Syntax = struct
     type ident = string
     type param = 
-        | Param of { type_: ident;
+        | Param of { type_: var_t;
                      name: ident; 
                      pos: Lexing.position }
     
@@ -50,12 +65,12 @@ module Syntax = struct
                             ; pos: Lexing.position }
 
     type instr =
-        | Decl of 	{ type_: ident
+        | Decl of 	{ type_: var_t
                     ; var: ident
                     ; pos: Lexing.position }
         | Return of { expr: expr
                     ; pos: Lexing.position }
-        | Break of { pos: Lexing.position }
+        | Break of  { pos: Lexing.position }
         | Cond   of { cond: expr
                     ; then_: block 
                     ; else_: block
@@ -69,7 +84,7 @@ module Syntax = struct
     and block = instr list
 
     type def = 
-        | Func of { type_: ident;
+        | Func of { type_: var_t;
                     name: ident;
                     params: param list;
                     block: block;
@@ -81,7 +96,7 @@ end
 module IR = struct
     type ident = string
     type param = 
-        | Param of ident * ident
+        | Param of var_t * ident
     type expr =
         | Int    of int
         | Var    of ident
@@ -96,13 +111,13 @@ module IR = struct
         | Expr   of expr
         | Return of expr
         | Break 
-        | Decl   of ident * ident 
+        | Decl   of var_t * ident 
         | Cond   of expr * block * block
         | Loop   of expr * block  
     and block = instr list
 
     type def = 
-    |	Func of ident * ident * param list * block
+    |	Func of var_t * ident * param list * block
 
     type prog = def list
 
@@ -122,16 +137,16 @@ module IR = struct
         and fmt_i = function
             | Break         -> "Break"
             | Return e      -> "Return (" ^ (fmt_e e) ^ ")"
-            | Decl (t,n)    -> "Decl (" ^ t ^ " " ^ n ^  ")"
+            | Decl (t,n)    -> "Decl (" ^ var_of_type t ^ " " ^ n ^  ")"
             | Cond (c,t,e)  -> "If (" ^ fmt_e c ^  ") { \n" ^ fmt_b t ^ "\n } \n else {" ^ fmt_b e ^ "}" 
             | Loop (c,b )   -> "while (" ^ fmt_e c ^  ") { \n" ^ fmt_b b ^ "\n } \n " 
             | Expr e ->  fmt_e e
 
         and fmt_b b = "[ " ^ (String.concat "\n; " (List.map fmt_i b)) ^ " ]"
         and fmt_p = function
-            Param (t,n) ->  " " ^ t ^ " " ^ n
+            Param (t,n) ->  " " ^ var_of_type t ^ " " ^ n
         and fmt_d  = function
-            | Func (t, n, p, b) -> "Func " ^ t ^ " " ^ n ^ " ( " ^ (String.concat ", " (List.map fmt_p p)) ^ " ){ " ^ "\n" ^  fmt_b b ^ "\n}"
+            | Func (t, n, p, b) -> "Func " ^ var_of_type t ^ " " ^ n ^ " ( " ^ (String.concat ", " (List.map fmt_p p)) ^ " ){ " ^ "\n" ^  fmt_b b ^ "\n}"
 
         in String.concat "\n" (List.map fmt_d ast)
 end
