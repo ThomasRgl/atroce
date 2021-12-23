@@ -132,8 +132,8 @@ opExpr  :
 | a = expr; Lle;  b = expr { Call {  func = "_le";  args = [a ; b]; pos = $startpos($2) } } 
 | a = expr; Lgt;  b = expr { Call {  func = "_gt";  args = [a ; b]; pos = $startpos($2) } } 
 | a = expr; Lge;  b = expr { Call {  func = "_ge";  args = [a ; b]; pos = $startpos($2) } } 
-(*| a = expr; Land;  b = expr {  } todo*)
-(*| a = expr; Lor;   b = expr {  } todo*)
+| a = expr; Land; b = expr { Call {  func = "_and"; args = [a ; b]; pos = $startpos($2) } } 
+| a = expr; Lor;  b = expr { Call {  func = "_or";  args = [a ; b]; pos = $startpos($2) } } 
 ;
 
 intExpr  : n = Lint { Int { value = n ; pos = $startpos(n) } };

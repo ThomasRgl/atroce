@@ -18,6 +18,9 @@ let nom_provisoire =
 			; "_gt" , Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ]) 
 			; "_ge" , Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ])
 
+            ; "_and" , Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ]) 
+			; "_or" ,  Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ])
+
 			; "puti", Func_t (Int_t "void", [ Int_t "int"  ])
 			; "puts", Func_t (Int_t "void", [ Int_t "int"  ])
 
@@ -117,6 +120,32 @@ let builtins =
     ; Sub( T2, T0, T1)
 	; Li (V0, 0)
 	; Blez (T2, "true")
+	; Jr RA
+
+	; Label "_and"
+	; Lw (T0, Mem (SP, 0))
+	; Lw (T1, Mem (SP, 4))
+    ; Li (T2, 0)
+    ; Li (V0, 0)
+    ; Bne (T0, T2, "true")
+    ; Move (T3, V0)
+    ; Li (V0, 0)
+    ; Bne (T1, T2, "true")
+    ; Move (T4, V0)
+    ; Mul(V0, T4, T3)
+	; Jr RA
+
+    ; Label "_or"
+	; Lw (T0, Mem (SP, 0))
+	; Lw (T1, Mem (SP, 4))
+    ; Li (T2, 0)
+    ; Li (V0, 0)
+    ; Bne (T0, T2, "true")
+    ; Move (T3, V0)
+    ; Li (V0, 0)
+    ; Bne (T1, T2, "true")
+    ; Move (T4, V0)
+    ; Add(V0, T4, T3)
 	; Jr RA
 
 	; Label "geti"
