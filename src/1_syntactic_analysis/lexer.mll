@@ -20,8 +20,6 @@ rule token = parse
 | ","      { Lcomma }
 | ";"      { Lsc }
 | "="      { Lassign }
-| "++"     { LToDo }
-| "--"     { LToDo }
 | "("      { Lopar }
 | ")"      { Lcpar }
 | "{"      { Lobrace }
@@ -43,7 +41,11 @@ rule token = parse
 | "->"     { LToDo } 
 | "&"      { Lesp }               
 | "!"      { Lptr } 
-| "^"      { Ldeclptr }   
+| "^"      { Ldeclptr }  
+| "++"     { Laddadd }  
+| "--"     { Lsubsub }  
+| "-="     { Lsubassign }  
+| "+="     { Laddassign }    
 
 (* Keywords *)
 

@@ -12,7 +12,7 @@
 %token Land Lor 
 %token Leq Lneq Llt Lle Lgt Lge 
 %token Lopar Lcpar Lobrace Lcbrace Lobrack Lcbrack
-%token Lassign
+%token Lassign Laddadd Lsubsub Lsubassign Laddassign
 %token Lesp Lptr Ldeclptr
 
 %token Lwhile Lfor Ldo Lbreak Lif Lelse 
@@ -21,14 +21,22 @@
 %token Lend
 %token LToDo
 
-%left Lassign;
+
+
+
+
+
+%left Lassign Laddadd Lsubsub Lsubassign Laddassign;
 %left Land Lor;
 %left Leq Lneq Llt Lgt Lle Lge;
 %left Ladd Lsub;
 %left Lmul Ldiv;
-%right Lesp;
-%left Lptr;
 %left Ldeclptr;
+%right Lesp;
+%right Lptr;
+%left Lif;
+%left Lelse;
+
 
 %start prog
 
@@ -61,9 +69,8 @@ def :
 
 
 block:
-| a = list(instr) { List.flatten a }
-/* | a = instr ;   b = block { a  @  b } 
-| a = instr ;  { a }  */
+| Lobrace; a = list(instr); Lcbrace { List.flatten a }
+| a = instr  { a } 
 ;
 
 
@@ -82,33 +89,33 @@ instr:
 
 
 expr:
-| a = opExpr         { a }
-| a = intExpr        { a }
-| a = varExpr        { a }
-| a = addrExpr       { a }
-| a = valueAdrrExpr  { a }
-| a = dmaExpr        { a }  (*direct memory acess*)
-| a = callExpr       { a }
-| a = assignExpr     { a }
+| a = opExpr              { a }
+| a = intExpr             { a }
+| a = varExpr             { a }
+| a = addrExpr            { a }
+| a = valueAdrrExpr       { a }
+| a = dmaExpr             { a }  (*direct memory acess*)
+| a = callExpr            { a }
+| a = assignExpr          { a }
+| Lopar; a = expr; Lcpar  { a }
 
 ;
 
 
 lvalue:
-| a = leftValueAdrrExpr { a }
-| a = leftVar   { a }
-| a = leftdma   { a }
+| a = leftValueAdrr            { a }
+| a = leftVar                  { a }
+| a = leftdma                  { a }
 ;
  
 
 
-(* decl *)
 
 
 (* lvalue *)
 
 
-leftValueAdrrExpr:
+leftValueAdrr:
 | Lptr; v = Lvar { LeftAddrValue{ name = v; offset = Int { value = 0 ; pos = $startpos(v) }; pos = $startpos($1)  } };
 
 leftVar :
@@ -137,32 +144,41 @@ opExpr  :
 ;
 
 intExpr  : n = Lint { Int { value = n ; pos = $startpos(n) } };
+
 varExpr : n = Lvar { Var { name  = n ; pos = $startpos(n) } };
  
 dmaExpr :
 | v = Lvar; Lobrack; e = expr; Lcbrack { Call {  func = "_valueAdrr";  args = [ Call {  func = "_add";  args = [ Var {name=v; pos = $startpos(v) }; Call {  func = "_mul"; args = [e ; Int { value = 4 ; pos = $startpos(v) }]; pos = $startpos(e) } ]; pos = $startpos(v) } ]; pos = $startpos(v) } } 
 
-
 callExpr : 
 | f = Lvar; Lopar; args = separated_list(Lcomma, expr) ;Lcpar {
-    Call { func = f; args = args; pos = $startpos(f)  }
-}
-;
+    Call { func = f; args = args; pos = $startpos(f) }  };
 
 addrExpr:
 | Lesp; v = Lvar { 
-    Addr{ name = v; pos = $startpos(v) }   
-}
-;
+    Addr{ name = v; pos = $startpos(v) }  };
 
 valueAdrrExpr:
-| Lptr; v = Lvar { Call {  func = "_valueAdrr";  args = [ Var {name=v; pos = $startpos(v) }  ]; pos = $startpos(v) } } 
-;
+| Lptr; v = Lvar { Call {  func = "_valueAdrr";  args = [ Var {name=v; pos = $startpos(v) }  ]; pos = $startpos(v) } } ;
 
-assignExpr: 
+assignExpr:  
 | l = lvalue; Lassign; b = expr { 
-    Assign { lvalue = l; expr = b; pos = $startpos($2) } };
-
+    Assign { lvalue = l; expr = b; pos = $startpos($2) } }
+/* | l = lvalue; Laddadd {
+    let e = (match l with 
+    | LeftVar l       -> Call {  func = "_add";  args = [ Var {name = l.name; pos = $startpos(l) } ; Int{value = 1; pos = $startpos(l) } ] ; pos = $startpos(l) }
+    | LeftAddrValue l -> Call {  func = "_add";  args = [ Var {name = l.name; pos = $startpos(l) }; Call {  func = "_mul"; args = [l.offset ; Int { value = 4 ; pos = $startpos(l) }]; pos = $startpos(l) } ]; pos = $startpos(l) } 
+    ) in 
+    Assign { lvalue = l; expr = e; pos = $startpos($2) } 
+}   
+| l = lvalue; Lsubsub {
+    let e = (match l with 
+    | LeftVar l       -> Call {  func = "_sub";  args = [ Var {name = l.name; pos = $startpos(l) } ; Int{value = 1; pos = $startpos(l) } ] ; pos = $startpos(l) }
+    | LeftAddrValue l -> Call {  func = "_sub";  args = [ Var {name = l.name; pos = $startpos(l) }; Call {  func = "_mul"; args = [l.offset ; Int { value = 4 ; pos = $startpos(l) }]; pos = $startpos(l) } ]; pos = $startpos(l) } 
+    ) in 
+    Assign { lvalue = l; expr = e; pos = $startpos($2) } 
+}   */
+;
 
 
 
@@ -172,7 +188,6 @@ assignExpr:
 decl : 
 |  p = list(Ldeclptr); v = Lvar;  { (p, v, 0, Int { value = 0 ; pos = $startpos(p) } ) }
 |  p = list(Ldeclptr); pair = separated_pair(Lvar,Lassign, expr )  { let (var, assign) = pair in  (p, var, 1, assign) }
-
 
 declInstr:
 | type_ = Lvar;  l = separated_nonempty_list(Lcomma, decl ) { 
@@ -207,14 +222,21 @@ breakInstr:
 ;
 
 ifthenelseInstr:
-| Lif; Lopar; c = expr; Lcpar; Lobrace; t = block; Lcbrace; Lelse; Lobrace; e = block; Lcbrace {
+| Lif; Lopar; c = expr; Lcpar; t = block; Lelse;  e = block {
     [ Cond{ cond = c;  then_ = t; else_ = e;  pos = $startpos($1)  }] 
-}  
+}
+/* | Lif; Lopar; c = expr; Lcpar; t = block  {
+    [ Cond{ cond = c;  then_ = t; else_ = [];  pos = $startpos($1)  }] 
+}   */
 ;
 
 loopInstr:
-| Lwhile Lopar cond = expr Lcpar Lobrace b = block Lcbrace {
-    [ Loop { cond = cond; block = b; pos = $startpos($1) } ]
+| Lwhile Lopar cond = expr Lcpar b = block  {
+    [ Loop { cond = cond; block = b; pos = $startpos($1) } ] 
+}
+| Lfor Lopar d = declInstr; Lsc; cond = expr; Lsc; a = assignExpr; Lcpar; b = block  {
+    let b = b @ [Expr{ expr = a; pos = $startpos(a) }] in 
+    d @ [ Loop { cond = cond; block = b; pos = $startpos($1) } ]
 }   
 ;
 
@@ -227,7 +249,7 @@ exprInstr:
 (* Def; *)
 
 funcDef: 
-| type_ = Lvar; ptr = list(Ldeclptr); name = Lvar; Lopar; p = separated_list(Lcomma, param) ; Lcpar; Lobrace; b=block; Lcbrace { 
+| type_ = Lvar; ptr = list(Ldeclptr); name = Lvar; Lopar; p = separated_list(Lcomma, param) ; Lcpar;  b=block { 
     let varType = type_to_type type_ ptr in 
     Func { type_ = varType; name = name; params = p; block = b; pos = $startpos(name) }
 }

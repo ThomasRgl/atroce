@@ -1,9 +1,9 @@
 
-** Conflict (shift/reduce) in state 68.
-** Token involved: Lmul
+** Conflict (shift/reduce) in state 103.
+** Token involved: Lelse
 ** This state is reached from prog after reading:
 
-Lvar Lvar Lopar loption(separated_nonempty_list(Lcomma,param)) Lcpar Lobrace Lvar
+Lvar list(Ldeclptr) Lvar Lopar loption(separated_nonempty_list(Lcomma,param)) Lcpar Lif Lopar expr Lcpar Lif Lopar expr Lcpar block
 
 ** The derivations that appear below have the following common factor:
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
@@ -11,29 +11,24 @@ Lvar Lvar Lopar loption(separated_nonempty_list(Lcomma,param)) Lcpar Lobrace Lva
 prog 
 def prog 
 funcDef 
-Lvar Lvar Lopar loption(separated_nonempty_list(Lcomma,param)) Lcpar Lobrace block Lcbrace 
-                                                                             list(instr) 
-                                                                             instr list(instr) 
-                                                                             (?)
+Lvar list(Ldeclptr) Lvar Lopar loption(separated_nonempty_list(Lcomma,param)) Lcpar block 
+                                                                                    instr 
+                                                                                    ifthenelseInstr 
+                                                                                    (?)
 
-** In state 68, looking ahead at Lmul, shifting is permitted
+** In state 103, looking ahead at Lelse, shifting is permitted
 ** because of the following sub-derivation:
 
-declInstr Lsc 
-Lvar separated_nonempty_list(Lcomma,expr) 
-     expr 
-     assignExpr 
-     lvalue Lassign expr 
-     leftValueAdrrExpr 
-     . Lmul Lvar 
+Lif Lopar expr Lcpar block Lelse block 
+                     instr 
+                     ifthenelseInstr 
+                     Lif Lopar expr Lcpar block . Lelse block 
 
-** In state 68, looking ahead at Lmul, reducing production
-** varExpr -> Lvar
+** In state 103, looking ahead at Lelse, reducing production
+** ifthenelseInstr -> Lif Lopar expr Lcpar block
 ** is permitted because of the following sub-derivation:
 
-exprInstr Lsc 
-expr 
-opExpr 
-expr Lmul expr // lookahead token appears
-varExpr // lookahead token is inherited
-Lvar . 
+Lif Lopar expr Lcpar block Lelse block // lookahead token appears
+                     instr // lookahead token is inherited
+                     ifthenelseInstr // lookahead token is inherited
+                     Lif Lopar expr Lcpar block . 
