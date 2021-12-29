@@ -127,7 +127,7 @@ leftVar :
 
 leftdma :
 | v = Lvar; Lobrack; e = expr; Lcbrack { 
-    LAddr{ addr = Var{  name = v; pos = $startpos(v) }; index = Int{ value = 0; pos = $startpos(v) }; pos = $startpos(v) }};
+    LAddr{ addr = Var{  name = v; pos = $startpos(v) }; index = e; pos = $startpos(v) }};
 
 
 (* Expr *)
