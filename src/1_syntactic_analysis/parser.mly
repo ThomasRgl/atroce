@@ -174,20 +174,23 @@ lvalueExpr:
 assignExpr:  
 | l = lvalue; Lassign; b = expr { 
     Assign { lvalue = l; expr = b; pos = $startpos($2) } }
-/* | l = lvalue; Laddadd {
-    let e = (match l with 
-    | LeftVar l       -> Call {  func = "_add";  args = [ Var {name = l.name; pos = $startpos(l) } ; Int{value = 1; pos = $startpos(l) } ] ; pos = $startpos(l) }
-    | LeftAddrValue l -> Call {  func = "_add";  args = [ Var {name = l.name; pos = $startpos(l) }; Call {  func = "_mul"; args = [l.offset ; Int { value = 4 ; pos = $startpos(l) }]; pos = $startpos(l) } ]; pos = $startpos(l) } 
-    ) in 
+| l = lvalue; Laddadd {
+    let e = Call {  func = "_add";  args = [ Lval {lvalue = l; pos = $startpos(l) } ; Int{value = 1; pos = $startpos(l) } ] ; pos = $startpos(l) } in 
     Assign { lvalue = l; expr = e; pos = $startpos($2) } 
 }   
 | l = lvalue; Lsubsub {
-    let e = (match l with 
-    | LeftVar l       -> Call {  func = "_sub";  args = [ Var {name = l.name; pos = $startpos(l) } ; Int{value = 1; pos = $startpos(l) } ] ; pos = $startpos(l) }
-    | LeftAddrValue l -> Call {  func = "_sub";  args = [ Var {name = l.name; pos = $startpos(l) }; Call {  func = "_mul"; args = [l.offset ; Int { value = 4 ; pos = $startpos(l) }]; pos = $startpos(l) } ]; pos = $startpos(l) } 
-    ) in 
+    let e = Call {  func = "_sub";  args = [ Lval {lvalue = l; pos = $startpos(l) } ; Int{value = 1; pos = $startpos(l) } ] ; pos = $startpos(l) } in 
     Assign { lvalue = l; expr = e; pos = $startpos($2) } 
-}   */
+} 
+| l = lvalue; Laddassign; e = expr {
+    let e = Call {  func = "_add";  args = [ Lval {lvalue = l; pos = $startpos(l) } ; e ] ; pos = $startpos(l) } in 
+    Assign { lvalue = l; expr = e; pos = $startpos($2) } 
+}   
+| l = lvalue; Lsubsub; e = expr {
+    let e = Call {  func = "_sub";  args = [ Lval {lvalue = l; pos = $startpos(l) } ; e ] ; pos = $startpos(l) } in 
+    Assign { lvalue = l; expr = e; pos = $startpos($2) } 
+}   
+;
 ;
 
 
