@@ -21,6 +21,7 @@ let expr_pos expr =
     | Syntax.Var    c -> c.pos
     | Syntax.Assign c -> c.pos
     | Syntax.Addr   c -> c.pos
+    | Syntax.Lval   c -> c.pos
 
 let errt expected given pos =
     raise (Error (Printf.sprintf "expected %s but given %s"
@@ -86,9 +87,18 @@ let rec analyze_expr expr l_env g_env =
             raise (Error (Printf.sprintf "unbound variable '%s'" v.name, v.pos))
 
 
+    | Syntax.Lval v ->
+        let  alv, t, l_env =  analyze_lvalue v.lvalue l_env g_env in
+        Lval (alv), t, l_env
+
 
 and analyze_lvalue lvalue l_env g_env =
     match lvalue with
+    | Syntax.LAddr a -> 
+        let addr, t, l_env = analyze_expr a.addr l_env g_env in 
+        let index, t, l_env = analyze_expr a.index l_env g_env in 
+        LAddr (addr,index ),t, l_env
+    (* match lvalue with
     | Syntax.LeftVar v ->
         (match Env.find_opt v.name l_env with
         | Some t ->
@@ -102,7 +112,7 @@ and analyze_lvalue lvalue l_env g_env =
         | Some t ->
                     let e, _, l_env = analyze_expr v.offset l_env g_env in 
                     LeftAddrValue (v.name, e), t ,l_env
-        | None -> raise (Error (Printf.sprintf "'%s' undeclared " v.name , v.pos)) )
+        | None -> raise (Error (Printf.sprintf "'%s' undeclared " v.name , v.pos)) ) *)
     
 
 

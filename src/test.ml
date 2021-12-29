@@ -20,7 +20,7 @@ let () =
     	close_in f ;
         let oc = open_out "test.asm" in
     	let ast = Semantics.analyze parsed in
-    	(* print_endline (IR.string_of_ir ast); *)
+    	print_endline (IR.string_of_ir ast);
 		let compiled = Compiler.compile ast in
         Mips.print_asm oc compiled;
         close_in f ;

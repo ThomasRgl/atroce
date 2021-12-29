@@ -75,12 +75,12 @@ block:
 
 
 instr:
-| a = returnInstr; Lsc { a }
-| a = declInstr;   Lsc { a }
-| a = ifthenelseInstr  { a }
-| a = loopInstr        { a }
-| a = exprInstr;  Lsc  { a }
-| a = breakInstr;  Lsc  { a }
+| a = returnInstr; Lsc    { a }
+| a = declInstr;   Lsc    { a }
+| a = ifthenelseInstr     { a }
+| a = loopInstr           { a }
+| a = exprInstr;  Lsc     { a }
+| a = breakInstr;  Lsc    { a }
 /* | a = expr; Lsc  { [Expr { expr = a; pos = $startpos(a) }] }  */ (*This is not clean, but this is the only way I found to parse the pointers *)
 (*| a = assignExpr; Lsc  { [Expr { expr = a; pos = $startpos(a) }] } 
 | a = callExpr; Lsc    { [Expr { expr = a; pos = $startpos(a) }] } *)
@@ -91,21 +91,24 @@ instr:
 expr:
 | a = opExpr              { a }
 | a = intExpr             { a }
-| a = varExpr             { a }
-| a = addrExpr            { a }
-| a = valueAdrrExpr       { a }
-| a = dmaExpr             { a }  (*direct memory acess*)
 | a = callExpr            { a }
 | a = assignExpr          { a }
+| a = lvalueExpr          { a }
+| a = addrExpr            { a }
+
+/* | a = varExpr             { a }
+| a = valueAdrrExpr       { a }
+| a = dmaExpr             { a }  (*direct memory acess*) */
+
 | Lopar; a = expr; Lcpar  { a }
 
 ;
 
 
 lvalue:
-| a = leftValueAdrr            { a }
-| a = leftVar                  { a }
-| a = leftdma                  { a }
+| a = leftPtr            { a }
+| a = leftVar            { a }
+| a = leftdma            { a }
 ;
  
 
@@ -114,15 +117,17 @@ lvalue:
 
 (* lvalue *)
 
-
-leftValueAdrr:
-| Lptr; v = Lvar { LeftAddrValue{ name = v; offset = Int { value = 0 ; pos = $startpos(v) }; pos = $startpos($1)  } };
+leftPtr:
+| Lptr; v = lvalueExpr { 
+    LAddr{ addr = v; index = Int{ value = 0; pos = $startpos(v) }; pos = $startpos(v) }}
 
 leftVar :
-| v = Lvar { LeftVar{ name = v; pos = $startpos(v)  } };
+| v = Lvar { 
+    LAddr{ addr = Addr{ name = v; pos = $startpos(v) }; index = Int{ value = 0; pos = $startpos(v) }; pos = $startpos(v) }}
 
 leftdma :
-| v = Lvar; Lobrack; e = expr; Lcbrack { LeftAddrValue{ name = v; offset = e ; pos = $startpos(v)  } };
+| v = Lvar; Lobrack; e = expr; Lcbrack { 
+    LAddr{ addr = Var{  name = v; pos = $startpos(v) }; index = Int{ value = 0; pos = $startpos(v) }; pos = $startpos(v) }};
 
 
 (* Expr *)
@@ -145,10 +150,14 @@ opExpr  :
 
 intExpr  : n = Lint { Int { value = n ; pos = $startpos(n) } };
 
-varExpr : n = Lvar { Var { name  = n ; pos = $startpos(n) } };
+/* varExpr : n = Lvar { Var { name  = n ; pos = $startpos(n) } };
  
 dmaExpr :
 | v = Lvar; Lobrack; e = expr; Lcbrack { Call {  func = "_valueAdrr";  args = [ Call {  func = "_add";  args = [ Var {name=v; pos = $startpos(v) }; Call {  func = "_mul"; args = [e ; Int { value = 4 ; pos = $startpos(v) }]; pos = $startpos(e) } ]; pos = $startpos(v) } ]; pos = $startpos(v) } } 
+
+valueAdrrExpr:
+| Lptr; v = Lvar { Call {  func = "_valueAdrr";  args = [ Var {name=v; pos = $startpos(v) }  ]; pos = $startpos(v) } } ; */
+
 
 callExpr : 
 | f = Lvar; Lopar; args = separated_list(Lcomma, expr) ;Lcpar {
@@ -158,8 +167,9 @@ addrExpr:
 | Lesp; v = Lvar { 
     Addr{ name = v; pos = $startpos(v) }  };
 
-valueAdrrExpr:
-| Lptr; v = Lvar { Call {  func = "_valueAdrr";  args = [ Var {name=v; pos = $startpos(v) }  ]; pos = $startpos(v) } } ;
+
+lvalueExpr:
+| l = lvalue{ Lval{ lvalue= l; pos = $startpos(l) } }
 
 assignExpr:  
 | l = lvalue; Lassign; b = expr { 
@@ -187,7 +197,7 @@ assignExpr:
 
 decl : 
 |  p = list(Ldeclptr); v = Lvar;  { (p, v, 0, Int { value = 0 ; pos = $startpos(p) } ) }
-|  p = list(Ldeclptr); pair = separated_pair(Lvar,Lassign, expr )  { let (var, assign) = pair in  (p, var, 1, assign) }
+|  p = list(Ldeclptr); pair = separated_pair(Lvar,Lassign, expr )  { let (var, expr) = pair in  (p, var, 1, expr) }
 
 declInstr:
 | type_ = Lvar;  l = separated_nonempty_list(Lcomma, decl ) { 
@@ -197,13 +207,13 @@ declInstr:
             
             let (p, var, bol, e ) = d in 
             let varType = type_to_type type_ p in 
-            if bol = 1 then
+            if bol = 1 then (*assign*)
                 let decl = [ Decl{ type_ = varType; var = var; pos = $startpos(type_) } ] in 
-                let l = LeftVar{ name = var; pos = $startpos(l)  } in 
-                let assign = Assign { lvalue = l; expr = e; pos = $startpos(l) } in 
+                let lvalue = LAddr{ addr = Addr{ name = var; pos = $startpos(l) }; index = Int{ value = 0; pos = $startpos(l) }; pos = $startpos(l) } in 
+                let assign = Assign { lvalue = lvalue; expr = e; pos = $startpos(l) } in 
                 let myexpr = [ Expr{ expr = assign; pos = $startpos(l)} ] in 
                 decl @  myexpr
-            else 
+            else (*no assign*)
                 [ Decl{ type_ = varType; var = var; pos = $startpos(type_) } ]  )) l )
              
 }  

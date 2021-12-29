@@ -57,12 +57,18 @@ module Syntax = struct
         | Assign of { lvalue: lvalue
                     ; expr: expr
                     ; pos: Lexing.position }
+        | Lval  of  { lvalue: lvalue
+                    ; pos: Lexing.position }
     and lvalue =  
-        | LeftVar of { name: ident
+        | LAddr of {  addr: expr
+                    ; index: expr 
+                    ; pos: Lexing.position } 
+        (* | LeftVar of { name: ident
                      ; pos: Lexing.position }
         | LeftAddrValue of {  name: ident
                             ; offset: expr 
-                            ; pos: Lexing.position }
+                            ; pos: Lexing.position } *)
+        
 
     type instr =
         | Decl of 	{ type_: var_t
@@ -103,9 +109,10 @@ module IR = struct
         | Addr   of ident 
         | Call   of ident * expr list
         | Assign of lvalue * expr
+        | Lval   of lvalue 
     and lvalue =
-        | LeftVar       of ident
-        | LeftAddrValue of ident * expr
+        | LAddr       of expr * expr
+        (* | LeftAddrValue of ident * expr *)
 
     type instr =
         | Expr   of expr
@@ -131,9 +138,11 @@ module IR = struct
             | Assign (lv, e) -> "Assign (\"" ^ fmt_lv lv ^ "\", " ^ (fmt_e e) ^ ")"
 
             | Addr v -> "&Var \"" ^ v ^ "\""
+            | Lval v -> fmt_lv v 
         and fmt_lv = function   
-            | LeftVar v        ->  "Var \"" ^ v ^ "\""
-            | LeftAddrValue (v,o)  -> "*Var \"" ^ v ^ "\" [" ^ fmt_e o ^ "]"
+            | LAddr (a,i)      ->  "*(" ^ fmt_e a ^ " + " ^ fmt_e i ^ ")"
+            (* | LeftVar v        ->  "Var \"" ^ v ^ "\""
+            | LeftAddrValue (v,o)  -> "*Var \"" ^ v ^ "\" [" ^ fmt_e o ^ "]" *)
         and fmt_i = function
             | Break         -> "Break"
             | Return e      -> "Return (" ^ (fmt_e e) ^ ")"

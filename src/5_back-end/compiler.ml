@@ -38,29 +38,44 @@ let rec compile_expr e env =
 	| Assign (lv, e) ->
 		(* compile_expr e env
 		@ [ Sw (V0, Mem( FP, Env.find lv env)) ] *)
-        compile_expr e env
-		@ (match lv with
-			| LeftVar  v -> [ Sw (V0, Mem( FP, Env.find v env) ) ]
-			| LeftAddrValue (v, o) -> 
-                            [ Move( T2, V0 ) ] @
-                            compile_expr o env @
-                            [ Move( T0, V0 ) 
-                            ; Li (T1, 4)
-                            ; Mul( T0, T0, T1)                   (* T0 contient l'index du tableau *) 
-                            ; Lw (T1, Mem( FP, Env.find v env))  (* T1 contient l'adresse du tableau *) 
-                            ; Add (T0, T0, T1)                   (* T0 contient l'adresse de l'index souhaité *) 
-                            ; Sw (T2, Mem( T0, 0))
-                            ])
-                            
+        compile_lvalue lv env   @
+        [ Addi (SP, SP, -4)]    @ 
+        [Sw (V0, Mem (SP, 0)) ] @ 
+        compile_expr e env      @  (*valeur expr dans V0 *)
+        [ Lw (T0, Mem (SP, 0))] @  (*adresse lv dans T0 *)
+        [Addi (SP, SP, 4)]      @  
+        [Sw (V0, Mem( T0, 0))]  
 
-            (* []
-						@ [ Addi (SP, SP, -4)
-						; Sw (V0, Mem (SP, 0)) ]
-						@ compile_expr a env
-						@ [ Lw (T0, Mem (SP, 0))
-						; Addi (SP, SP, 4)
-						; Sw (T0, Mem (V0, 0)) ]) 
-     *)
+                            
+    | Lval (lv) ->
+        let lv = compile_lvalue lv env in (*adresse lv dans V0 *)
+        lv @ [Lw (V0, Mem (V0, 0))]
+
+and compile_lvalue l env =
+    match l with 
+    (*
+    | LAddr (a,i) -> 
+        compile_expr a env      @
+        [ Addi (SP, SP, -4)]    @ 
+        [Sw (T0, Mem (SP, 0)) ] @ 
+        [ Mul( T0,T0, T0 ) ]@
+        (*compile_expr i env      @  (*valeur index dans V0 *)*)
+        [ Lw (T0, Mem (SP, 0))] @  (*adresse lv dans T0 *)
+        [Addi (SP, SP, 4)]      
+        (*[ Li  (T3, 4) ]         @
+        [ Mul( V0,V0, T3 ) ]    @
+        [ Add(V0, V0, T0)]         (*v0 = adresse + index  *)*)*)
+
+    | LAddr (a,i) -> 
+        compile_expr a env      @
+        [ Addi (SP, SP, -4)]    @ 
+        [Sw (V0, Mem (SP, 0)) ] @ 
+        compile_expr i env      @  (*valeur index dans V0 *)
+        [ Lw (T0, Mem (SP, 0))] @  (*adresse lv dans T0 *)
+        [Addi (SP, SP, 4)]      @  
+        [ Li  (T3, 4) ]         @
+        [ Mul( V0,V0, T3 ) ]    @
+        [ Add(V0, V0, T0)]         (*v0 = adresse + index  *)
 
 let rec compile_instr i info =
     match i with
@@ -89,7 +104,8 @@ let rec compile_instr i info =
 	    let ct = compile_block t { info with code = []
 										; counter = info.counter + 1 } in
 	    let ce = compile_block e { info with code = []
-										; counter = ct.counter } in
+										; counter = ct.counter 
+                                        ; fpo = ct.fpo } in
         { info with
         code = info.code
                 @ compile_expr c info.env
@@ -99,7 +115,8 @@ let rec compile_instr i info =
                     ; Label ("else" ^ uniq) ]
                 @ ce.code
                 @ [ Label ("endif" ^ uniq) ]
-        ; counter = ce.counter }
+        ; counter = ce.counter 
+        ; fpo = ce.fpo }
     | Loop (c, b) -> 
         let uniq = string_of_int info.counter in
         let oldBreakpoint = info.break in 
@@ -115,7 +132,8 @@ let rec compile_instr i info =
                 @ [ B ("condLoop" ^ uniq) ]
                 @ [ Label ("endloop" ^ uniq) ]
         ; counter = cb.counter 
-        ; break = oldBreakpoint }
+        ; break = oldBreakpoint 
+        ; fpo = cb.fpo }
 
 and compile_block b info =
     match b with

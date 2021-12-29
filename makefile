@@ -15,3 +15,32 @@ launch :
 
 launch2 : 
 	./test.byte tests/5.test 
+
+
+test0 : 
+	./test.byte tests/0.test 
+	spim -file test.asm
+test1 : 
+	./test.byte tests/1.test 
+	spim -file test.asm
+test2 : 
+	./test.byte tests/2.test 
+	spim -file test.asm
+test3 : 
+	./test.byte tests/3.test 
+	spim -file test.asm
+test4 : 
+	./test.byte tests/4.test 
+	spim -file test.asm
+test5 : 
+	./test.byte tests/5.test 
+	spim -file test.asm
+test6 : 
+	./test.byte tests/6.test 
+	spim -file test.asm
+test7 : 
+	./test.byte tests/7.test 
+	spim -file test.asm
+
+asm:
+	spim -file test.asm
