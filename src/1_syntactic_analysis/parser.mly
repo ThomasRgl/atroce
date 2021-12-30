@@ -5,9 +5,9 @@
 %}
 
 %token <int> Lint
-%token <string> Lvar
+%token <string> Lvar 
 
-%token Lsc Lcomma
+%token Lsc Lcomma Ldot
 %token Ladd Lsub Lmul Ldiv 
 %token Land Lor 
 %token Leq Lneq Llt Lle Lgt Lge 
@@ -17,7 +17,7 @@
 
 %token Lwhile Lfor Ldo Lbreak Lif Lelse 
 %token Lreturn 
-
+%token Lstruct
 %token Lend
 %token LToDo
 
@@ -31,11 +31,12 @@
 %left Leq Lneq Llt Lgt Lle Lge;
 %left Ladd Lsub;
 %left Lmul Ldiv;
+%left Ldot; 
 %left Ldeclptr;
 %right Lesp;
 %right Lptr;
-%left Lif;
-%left Lelse;
+%left Lif Lelse;
+
 
 
 %start prog
@@ -64,7 +65,8 @@ prog  :
 ;
 
 def :
-| a = funcDef { a }
+| a = funcDef  { a }
+| a = structDef { a }
 ;
 
 
@@ -88,27 +90,26 @@ instr:
 
 
 
-expr:
-| a = opExpr              { a }
-| a = intExpr             { a }
-| a = callExpr            { a }
-| a = assignExpr          { a }
-| a = lvalueExpr          { a }
-| a = addrExpr            { a }
-
-/* | a = varExpr             { a }
-| a = valueAdrrExpr       { a }
-| a = dmaExpr             { a }  (*direct memory acess*) */
-
-| Lopar; a = expr; Lcpar  { a }
-
+preExpr:
+| a = opExpr                 { a }
+| a = intExpr                { a }
+| a = callExpr               { a }
+| a = assignExpr             { a }
+| a = addrExpr               { a }
+| Lopar; a = preExpr; Lcpar  { a }
 ;
 
+expr : 
+| a = lvalueExpr             { a }
+| a = preExpr                { a }
 
 lvalue:
-| a = leftPtr            { a }
-| a = leftVar            { a }
-| a = leftdma            { a }
+| a = leftPtr                { a }
+| a = leftVar                { a }
+| a = leftdma                { a }
+| a = leftStructAcces    { a }
+| Lopar; a = lvalue; Lcpar   { a }
+
 ;
  
 
@@ -129,7 +130,10 @@ leftdma :
 | v = Lvar; Lobrack; e = expr; Lcbrack { 
     LAddr{ addr = Var{  name = v; pos = $startpos(v) }; index = e; pos = $startpos(v) }};
 
-
+leftStructAcces:
+| v = Lvar; Ldot; n = Lvar;  { 
+    LAddrStruct{ addr = Addr{ name = v; pos = $startpos(v) }; elem = n; pos = $startpos(v) }
+};
 (* Expr *)
 
 
@@ -219,7 +223,11 @@ declInstr:
             else (*no assign*)
                 [ Decl{ type_ = varType; var = var; pos = $startpos(type_) } ]  )) l )
              
-}  
+} 
+| Lstruct;type_ = Lvar; p = list(Ldeclptr); name = Lvar {
+    [ DeclStruct{ type_ = type_; var = name; ptr = p; pos = $startpos(type_) } ]  
+
+}
 ;
 
 returnInstr: 
@@ -265,6 +273,17 @@ funcDef:
 | type_ = Lvar; ptr = list(Ldeclptr); name = Lvar; Lopar; p = separated_list(Lcomma, param) ; Lcpar;  b=block { 
     let varType = type_to_type type_ ptr in 
     Func { type_ = varType; name = name; params = p; block = b; pos = $startpos(name) }
+}
+;
+
+
+
+declStruct:
+| type_ = Lvar; p = list(Ldeclptr); name = Lvar;  Lsc { let varType = type_to_type type_ p in 
+                                                Param{ type_ = varType; name = name; pos = $startpos(type_) } }; 
+structDef:
+| Lstruct; name = Lvar; Lobrace; p = nonempty_list(declStruct ); Lcbrace; Lsc { 
+    Struct{name = name; params = p; pos = $startpos($1) }
 }
 ;
 

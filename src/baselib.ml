@@ -3,7 +3,7 @@ open Mips
 
 module Env = Map.Make(String)
 
-let nom_provisoire =
+let global_env =
 	Env.of_seq
 		(List.to_seq
 			[ "_add", Func_t (Int_t "int", [ Int_t "int" ; Int_t "int" ])
@@ -27,13 +27,16 @@ let nom_provisoire =
             ; "_valueAdrr" , Func_t (Int_t "int", [ Int_t "int" ])
 
             ; "malloc" , Func_t (Int_t "int", [ Int_t "int" ])
+
+            (* ; "teststruct" , Struct_t2( [("a", Int_t "int", 0); ("b", Int_t "int", 4) ] ) *)
+            (* ; "teststruct" , Struct_t2( Struct.of_seq ( List.to_seq [(0, Int_t "int", 0)] )) *)
 		])
 
 let _type_ =
 	Env.of_seq
 		(List.to_seq
-			[ "int" , 4
-			; "int2", 8
+			[ "int" , 4;
+            "teststruct", 8
 			])
 
 

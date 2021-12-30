@@ -20,6 +20,7 @@ rule token = parse
 | ","      { Lcomma }
 | ";"      { Lsc }
 | "="      { Lassign }
+| "."      { Ldot }
 | "("      { Lopar }
 | ")"      { Lcpar }
 | "{"      { Lobrace }
@@ -49,7 +50,7 @@ rule token = parse
 
 (* Keywords *)
 
-
+| "struct" { Lstruct }
 | "return" { Lreturn }
 | "while"  { Lwhile }
 | "for"    { Lfor }

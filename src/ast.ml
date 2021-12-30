@@ -1,12 +1,24 @@
+module MapStruct = Map.Make(String)
+
+
 type var_t =
     | Int_t of string
     | Ptr_t of var_t
     | Struct_t of string
 
+type truc = ( string * var_t * int)
+
 type type_t = (* nom à changer !  *)
     | Var_t of var_t
     | Func_t of var_t * var_t list
+    (* | Struct_t2 of truc list *)
+    (* | Struct_t2 of ( string * var_t * int) list *)
+    (* | Struct_t2 of ( string * var_t * int) list *)
+
+
+    | Struct_t2 of  (var_t * int ) MapStruct.t
     (* | Int_t   *)
+
 
 let rec var_of_type v =
     match v with 
@@ -25,7 +37,7 @@ let rec type_to_type s p =
     | a :: b -> Ptr_t( type_to_type s b )
     | []     -> Int_t (s)
 
-let rec string_of_type_t t =
+(* let rec string_of_type_t t =
     match t with
     (* | Int_t  -> "int" *)
     | Func_t (r, a) ->
@@ -34,7 +46,7 @@ let rec string_of_type_t t =
          ^ (if (List.length a) > 1 then ")" else "")
          ^ " -> " ^ (var_of_type r)
     | Var_t (v) -> var_of_type v
-
+    | Struct_t2 v -> String.concat *)
 
 
 module Syntax = struct
@@ -63,6 +75,9 @@ module Syntax = struct
         | LAddr of {  addr: expr
                     ; index: expr 
                     ; pos: Lexing.position } 
+        | LAddrStruct of {  addr: expr
+                        ; elem: string 
+                        ; pos: Lexing.position } 
         (* | LeftVar of { name: ident
                      ; pos: Lexing.position }
         | LeftAddrValue of {  name: ident
@@ -73,6 +88,10 @@ module Syntax = struct
     type instr =
         | Decl of 	{ type_: var_t
                     ; var: ident
+                    ; pos: Lexing.position }
+        | DeclStruct of { type_: ident
+                    ; var: ident
+                    ; ptr: unit list
                     ; pos: Lexing.position }
         | Return of { expr: expr
                     ; pos: Lexing.position }
@@ -95,6 +114,9 @@ module Syntax = struct
                     params: param list;
                     block: block;
                     pos: Lexing.position }
+        | Struct of { name: ident;
+                    params: param list;
+                    pos: Lexing.position }
 
     type prog = def list
 end
@@ -112,7 +134,7 @@ module IR = struct
         | Lval   of lvalue 
     and lvalue =
         | LAddr       of expr * expr
-        (* | LeftAddrValue of ident * expr *)
+        (* | LAddrStruct of expr * expr *)
 
     type instr =
         | Expr   of expr
@@ -141,6 +163,7 @@ module IR = struct
             | Lval v -> fmt_lv v 
         and fmt_lv = function   
             | LAddr (a,i)      ->  "*(" ^ fmt_e a ^ " + " ^ fmt_e i ^ ")"
+            (* | LAddrStruct (a,i)->  "*(" ^ fmt_e a ^ ")."^ fmt_e i *)
             (* | LeftVar v        ->  "Var \"" ^ v ^ "\""
             | LeftAddrValue (v,o)  -> "*Var \"" ^ v ^ "\" [" ^ fmt_e o ^ "]" *)
         and fmt_i = function
