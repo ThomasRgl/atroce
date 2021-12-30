@@ -1,0 +1,13 @@
+
+# Error on line 10 col 4: This is not a struct .
+
+struct aa{
+    int a;
+};
+
+int main(){
+    struct aa var;
+    int a;
+    a.a;
+
+}

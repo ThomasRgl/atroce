@@ -1,0 +1,6 @@
+# unbound variable 'i'.
+
+int main(){
+
+    i = 10;
+}

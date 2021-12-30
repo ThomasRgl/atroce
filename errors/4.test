@@ -1,0 +1,12 @@
+
+# Error on line 10 col 4: Cet element n'existe pas dans la structure.
+
+struct aa{
+    int a;
+};
+
+int main(){
+    struct aa var;
+    var.jd;
+
+}

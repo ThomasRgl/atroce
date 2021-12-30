@@ -1,4 +1,38 @@
 
+** Conflict (shift/reduce) in state 135.
+** Token involved: Lelse
+** This state is reached from prog after reading:
+
+Lvar list(Ldeclptr) Lvar Lopar loption(separated_nonempty_list(Lcomma,param)) Lcpar Lif Lopar expr Lcpar Lif Lopar expr Lcpar block
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+prog 
+def prog 
+funcDef 
+Lvar list(Ldeclptr) Lvar Lopar loption(separated_nonempty_list(Lcomma,param)) Lcpar block 
+                                                                                    instr 
+                                                                                    ifthenelseInstr 
+                                                                                    (?)
+
+** In state 135, looking ahead at Lelse, shifting is permitted
+** because of the following sub-derivation:
+
+Lif Lopar expr Lcpar block Lelse block 
+                     instr 
+                     ifthenelseInstr 
+                     Lif Lopar expr Lcpar block . Lelse block 
+
+** In state 135, looking ahead at Lelse, reducing production
+** ifthenelseInstr -> Lif Lopar expr Lcpar block
+** is permitted because of the following sub-derivation:
+
+Lif Lopar expr Lcpar block Lelse block // lookahead token appears
+                     instr // lookahead token is inherited
+                     ifthenelseInstr // lookahead token is inherited
+                     Lif Lopar expr Lcpar block . 
+
 ** Conflict (shift/reduce) in state 82.
 ** Token involved: Lobrack
 ** This state is reached from prog after reading:

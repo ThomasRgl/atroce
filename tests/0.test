@@ -1,0 +1,17 @@
+# déclaration
+
+int main(){
+    
+    int i;
+    i = 10;
+    puti(i);
+    puts(10);
+
+    int a=1,b=2,c=a+b;
+    puti(a);
+    puts(10);
+    puti(b);
+    puts(10);
+    puti(c);
+    puts(10);
+}

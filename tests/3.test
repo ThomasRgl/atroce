@@ -1,0 +1,15 @@
+#Les fonctions 
+
+int foo(int a){
+    puti(a);
+    return a;
+}
+
+int main(){
+    int b;
+    for(int i = 0; i < 10; i = i + 1){
+        b = foo(i);
+        puti(b);
+    }
+}
+

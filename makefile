@@ -39,8 +39,40 @@ test6 :
 	./test.byte tests/6.test 
 	spim -file test.asm
 test7 : 
-	./test.byte tests/7.test 
+	./test.byte tests/main.test 
 	spim -file test.asm
+
+
+
+
+
+error0 : 
+	./test.byte errors/0.test 
+	spim -file test.asm
+error1 : 
+	./test.byte errors/1.test 
+	spim -file test.asm
+error2 : 
+	./test.byte errors/2.test 
+	spim -file test.asm
+error3 : 
+	./test.byte errors/3.test 
+	spim -file test.asm
+error4 : 
+	./test.byte errors/4.test 
+	spim -file test.asm
+error5 : 
+	./test.byte errors/5.test 
+	spim -file test.asm
+error6 : 
+	./test.byte errors/6.test 
+	spim -file test.asm
+error7 : 
+	./test.byte errors/main.test 
+	spim -file test.asm
+
+
+
 
 asm:
 	spim -file test.asm

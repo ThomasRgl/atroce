@@ -106,8 +106,8 @@ and analyze_lvalue lvalue l_env g_env t_env =
         | Some (Struct_t2 (mymap)) -> (match MapStruct.find_opt a.elem mymap with 
                                         | Some a -> a 
                                         | None -> raise (Error (Printf.sprintf "Cet element n'existe pas dans la structure", a.pos)))  
-        | Some _ -> raise (Error (Printf.sprintf "Should never happen, not struct ??", a.pos))
-        | None -> raise (Error (Printf.sprintf "Should never happen" , a.pos))
+        | Some _ -> raise (Error (Printf.sprintf "This is not a struct", a.pos))
+        | None -> raise (Error (Printf.sprintf "This is not a struct "  , a.pos))
         ) in 
          
         LAddr (addr,Int(index) ),elemType, l_env
@@ -147,7 +147,6 @@ let rec analyze_instr instr l_env g_env t_env break =
 
                 let vartype = Struct_t(d.type_) in 
                 let newvartype = List.fold_left(fun var p -> Ptr_t(var) ) vartype d.ptr in 
-                Printf.eprintf "ajout de %s à l'env " d.var; 
                 let l_env = Env.add d.var newvartype l_env in 
                 Decl( newvartype, d.var), l_env, g_env
 

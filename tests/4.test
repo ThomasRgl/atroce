@@ -1,0 +1,23 @@
+# fonctions récurcives 
+
+int fibonacci(int n)
+{
+    if (n == 0 || n == 1) {
+        return n;
+    }
+    else{
+        return fibonacci(n-1) + fibonacci(n-2);
+    }
+}
+
+int main(){
+    int i = 0;
+    while(i != 10) {
+        int a = fibonacci(i);
+        puti(a);
+        puts(10);
+
+        i = i + 1;
+    }
+    
+}

@@ -1,0 +1,14 @@
+# Error on line 13 col 4: undefined function 'fo'.
+
+
+
+int foo(int a, int b){
+
+}
+
+
+int main(){
+    
+
+    fo(0,var);
+}

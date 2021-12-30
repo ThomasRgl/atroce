@@ -1,0 +1,29 @@
+# les tableaux
+
+int main(){
+    
+    
+    int ^^ c = malloc (10); 
+    for(int i = 0; i < 10; i++){
+        c[i] = malloc (10); 
+    }
+    
+    for(int k = 0; k < 10; k++){
+        for(int j = 0; j < 10; j++) {
+            c[k][j] = k * j;
+
+            
+        }
+    }
+
+    for(int a = 0; a < 10; a++){
+        for(int h = 0; h < 10; h++) {
+            puti(c[a][h]);
+            puts(32);
+            puts(32);
+        }
+        puts(10);
+    }
+    
+
+}

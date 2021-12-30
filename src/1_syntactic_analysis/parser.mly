@@ -190,7 +190,7 @@ assignExpr:
     let e = Call {  func = "_add";  args = [ Lval {lvalue = l; pos = $startpos(l) } ; e ] ; pos = $startpos(l) } in 
     Assign { lvalue = l; expr = e; pos = $startpos($2) } 
 }   
-| l = lvalue; Lsubsub; e = expr {
+| l = lvalue; Lsubassign; e = expr {
     let e = Call {  func = "_sub";  args = [ Lval {lvalue = l; pos = $startpos(l) } ; e ] ; pos = $startpos(l) } in 
     Assign { lvalue = l; expr = e; pos = $startpos($2) } 
 }   
@@ -290,14 +290,14 @@ structDef:
 
 (* misc *)
 
-params: 
+/* params: 
 | a = nonemptyparams { a } 
 ;
 
 nonemptyparams: 
 | b = param { [b] }
 | a = nonemptyparams Lcomma b = param { a @ [ b ] }
-;
+; */
 
 param: 
 | type_ = Lvar; p = list(Ldeclptr); name = Lvar { 

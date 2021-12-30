@@ -1,0 +1,88 @@
+#fun 
+# multiplication de matrice 
+# source du code :  https://www.sanfoundry.com/c-program-perform-matrix-multiplication/
+
+int main()
+{
+    int sum = 0;
+    #int first[10][10], second[10][10], multiply[10][10];
+
+    int ^^ first = malloc (10); 
+    int ^^ second = malloc (10); 
+    int ^^ multiply = malloc (10); 
+
+    for(int i = 0; i < 10; i++){
+        first[i] = malloc (10); 
+        second[i] = malloc (10); 
+        multiply[i] = malloc (10); 
+    }
+
+    
+
+
+ 
+
+    for ( int  c = 0 ; c < 10 ; c++ )
+        for ( int d = 0 ; d < 10 ; d++ )
+            first[c][d] = c * d;
+
+
+
+    for ( int cc = 0 ; cc < 10 ; cc++ )
+        for ( int dd = 0 ; dd < 10 ; dd++ )
+            second[cc][dd] = cc * dd;
+
+ 
+ 
+    
+    
+    for ( int ccc = 0 ; ccc < 10 ; ccc++ ) {
+        for ( int ddd = 0 ; ddd < 10 ; ddd++ ) {
+            for ( int k = 0 ; k < 10 ; k++ ) {
+                sum = sum + first[ccc][k]*second[k][ddd];
+            }
+            multiply[ccc][ddd] = sum;
+            sum = 0;
+      }
+    }
+
+
+    
+    for(int a = 0; a < 10; a++){
+        for(int h = 0; h < 10; h++) {
+            puti(first[a][h]);
+            puts(32);
+            puts(32);
+        }
+        puts(10);
+    }
+    puts(10);
+    puts(10);
+
+
+    for(int aa = 0; aa < 10; aa++){
+        for(int hh = 0; hh < 10; hh++) {
+            puti(second[aa][hh]);
+            puts(32);
+            puts(32);
+        }
+        puts(10);
+    }
+    puts(10);
+    puts(10);
+  
+    for(int aaa = 0; aaa < 10; aaa++){
+        for(int hhh = 0; hhh < 10; hhh++) {
+            puti(multiply[aaa][hhh]);
+            puts(32);
+            puts(32);
+        }
+        puts(10);
+    }
+    puts(10);
+    puts(10);
+ 
+
+  return 0;
+
+}

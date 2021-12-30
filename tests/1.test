@@ -1,0 +1,29 @@
+#les if 
+
+int main(){
+    
+    int i;
+    i = 10;
+
+    if(i < 10){
+        puti(1);
+    }
+    else{
+        puti(0);
+    }
+
+    puts(10);
+
+    if(i <= 10)
+        puti(1);
+    else
+        puti(0);
+
+    puts(10);
+    
+    if(i > 2)
+        puti(1);
+
+
+}
+

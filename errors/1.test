@@ -1,0 +1,10 @@
+# Error on line 9 col 4: expected 2 arguments but given 0.
+
+int foo(int a, int b){
+
+}
+
+int main(){
+
+    foo();
+}

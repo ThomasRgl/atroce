@@ -1,0 +1,15 @@
+# Pointeurs et passage dans les fonctions
+
+int foo(int ^ n)
+{
+    !n = 10;
+}
+
+int main(){
+    int ^ i ;
+    int b = 99;
+    i = &b;
+    foo(i);
+    puti(b);
+    
+}

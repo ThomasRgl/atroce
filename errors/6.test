@@ -1,0 +1,12 @@
+# DEVRAIT RAISE UNE ERREURE 
+int foo(){
+
+}
+
+int foo(){
+
+}
+
+int main(){
+    int i;
+}
