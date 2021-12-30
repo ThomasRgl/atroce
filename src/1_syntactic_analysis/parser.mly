@@ -127,8 +127,8 @@ leftVar :
     LAddr{ addr = Addr{ name = v; pos = $startpos(v) }; index = Int{ value = 0; pos = $startpos(v) }; pos = $startpos(v) }}
 
 leftdma :
-| v = Lvar; Lobrack; e = expr; Lcbrack { 
-    LAddr{ addr = Var{  name = v; pos = $startpos(v) }; index = e; pos = $startpos(v) }};
+| v = lvalueExpr; Lobrack; e = expr; Lcbrack { 
+    LAddr{ addr = v; index = e; pos = $startpos(v) }};
 
 leftStructAcces:
 | v = Lvar; Ldot; n = Lvar;  { 
@@ -246,9 +246,9 @@ ifthenelseInstr:
 | Lif; Lopar; c = expr; Lcpar; t = block; Lelse;  e = block {
     [ Cond{ cond = c;  then_ = t; else_ = e;  pos = $startpos($1)  }] 
 }
-/* | Lif; Lopar; c = expr; Lcpar; t = block  {
+ | Lif; Lopar; c = expr; Lcpar; t = block  {
     [ Cond{ cond = c;  then_ = t; else_ = [];  pos = $startpos($1)  }] 
-}   */
+}   
 ;
 
 loopInstr:

@@ -1,9 +1,9 @@
 
-** Conflict (shift/reduce) in state 103.
-** Token involved: Lelse
+** Conflict (shift/reduce) in state 82.
+** Token involved: Lobrack
 ** This state is reached from prog after reading:
 
-Lvar list(Ldeclptr) Lvar Lopar loption(separated_nonempty_list(Lcomma,param)) Lcpar Lif Lopar expr Lcpar Lif Lopar expr Lcpar block
+Lvar list(Ldeclptr) Lvar Lopar loption(separated_nonempty_list(Lcomma,param)) Lcpar Lptr lvalueExpr
 
 ** The derivations that appear below have the following common factor:
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
@@ -13,22 +13,27 @@ def prog
 funcDef 
 Lvar list(Ldeclptr) Lvar Lopar loption(separated_nonempty_list(Lcomma,param)) Lcpar block 
                                                                                     instr 
-                                                                                    ifthenelseInstr 
+                                                                                    exprInstr Lsc 
+                                                                                    expr 
+                                                                                    lvalueExpr 
+                                                                                    lvalue 
                                                                                     (?)
 
-** In state 103, looking ahead at Lelse, shifting is permitted
-** because of the following sub-derivation:
-
-Lif Lopar expr Lcpar block Lelse block 
-                     instr 
-                     ifthenelseInstr 
-                     Lif Lopar expr Lcpar block . Lelse block 
-
-** In state 103, looking ahead at Lelse, reducing production
-** ifthenelseInstr -> Lif Lopar expr Lcpar block
+** In state 82, looking ahead at Lobrack, reducing production
+** leftPtr -> Lptr lvalueExpr
 ** is permitted because of the following sub-derivation:
 
-Lif Lopar expr Lcpar block Lelse block // lookahead token appears
-                     instr // lookahead token is inherited
-                     ifthenelseInstr // lookahead token is inherited
-                     Lif Lopar expr Lcpar block . 
+leftdma 
+lvalueExpr Lobrack expr Lcbrack // lookahead token appears
+lvalue // lookahead token is inherited
+leftPtr // lookahead token is inherited
+Lptr lvalueExpr . 
+
+** In state 82, looking ahead at Lobrack, shifting is permitted
+** because of the following sub-derivation:
+
+leftPtr 
+Lptr lvalueExpr 
+     lvalue 
+     leftdma 
+     lvalueExpr . Lobrack expr Lcbrack 
