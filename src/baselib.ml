@@ -163,11 +163,6 @@ let builtins =
 	; Syscall
 	; Jr RA
 
-    (* wtf are you doing ??? la pile est refaite à chaque appel de fonction tu as pas l'adresse de la variable fdp 
-    ; Label "_adrr"
-	; Lw (V0, Mem (SP, 0) )
-    (* ; Move (V0, SP ) *)
-	; Jr RA *)
 
     ; Label "_valueAdrr"
 	; Lw (T0, Mem (SP, 0))
